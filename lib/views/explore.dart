@@ -138,7 +138,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   _buildListingItem(
                     imageUrl: 'https://source.unsplash.com/random/?tropical,house',
-                    location: 'Bali, Indonesia',
+                    location: 'Bali, Je,m--mber',
                     rating: 4.85,
                     views: '28,541',
                     dates: 'Jul 10 – Jul 15',
