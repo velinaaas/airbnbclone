@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'explore.dart';
-import 'profil.dart';
+// import 'explore.dart';
+// import 'profil.dart';
 
 class FavoritPage extends StatelessWidget {
   const FavoritPage({super.key}); // Optional: Tambahkan konstruktor dengan key
