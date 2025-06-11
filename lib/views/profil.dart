@@ -1,5 +1,6 @@
+import 'package:airbnbclone/pages/hari_ini_page.dart';
 import 'package:flutter/material.dart';
-import 'dashboard_host.dart'; // Pastikan file ini berada di direktori yang sama
+
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
@@ -108,7 +109,7 @@ class ProfilPage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const DashboardHost()),
+                MaterialPageRoute(builder: (context) => HariIniPage()),
               );
             },
             style: ElevatedButton.styleFrom(
