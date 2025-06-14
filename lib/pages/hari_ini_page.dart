@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'kalender_page.dart';
+import 'package:airbnbclone/pages/menu_page.dart';
 import 'tempat_page.dart';
 import 'pesan_page.dart';
-import 'menu_page.dart';
 
 class HariIniPage extends StatefulWidget {
   const HariIniPage({super.key});
@@ -15,11 +14,10 @@ class _HariIniPageState extends State<HariIniPage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    _HariIniContent(),
-    KalenderPage(),
+    const _HariIniContent(),
     TempatPage(),
     PesanPage(),
-    MenuPage(),
+    const MenuPage(),
   ];
 
   @override
@@ -28,8 +26,11 @@ class _HariIniPageState extends State<HariIniPage> {
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red,
+        selectedItemColor:Colors.pink,
         unselectedItemColor: Colors.grey,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
@@ -41,12 +42,8 @@ class _HariIniPageState extends State<HariIniPage> {
             label: 'Hari ini',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Kalender',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.house),
-            label: 'Tempat',
+            label: 'Telusuri',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
@@ -61,6 +58,7 @@ class _HariIniPageState extends State<HariIniPage> {
     );
   }
 }
+
 class _HariIniContent extends StatelessWidget {
   const _HariIniContent();
 
@@ -83,7 +81,7 @@ class _HariIniContent extends StatelessWidget {
                 Icon(Icons.notifications_none),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
@@ -96,24 +94,24 @@ class _HariIniContent extends StatelessWidget {
               ),
               child: const Text('Selesaikan Iklan Anda'),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   _tabChip('Akan check-out (0)'),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   _tabChip('Tamu saat ini (0)'),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   _tabChip('Segera tiba (0)'),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   _tabChip('Mendatang (0)'),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   _tabChip('Menunggu penulisan ulasan (0)'),
                 ],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -133,7 +131,7 @@ class _HariIniContent extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextButton(
               onPressed: () {},
               child: const Text(
@@ -141,14 +139,24 @@ class _HariIniContent extends StatelessWidget {
                 style: TextStyle(decoration: TextDecoration.underline),
               ),
             ),
-            SizedBox(height: 24),
-            const Text('Kami siap membantu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 12),
-            _helpCard(Icons.group, 'Bergabung dengan Klub Tuan Rumah lokal', 'Jalin koneksi, berkolaborasi, dan berbagi info dengan tuan rumah lain.'),
-            _helpCard(Icons.support_agent, 'Hubungi layanan dukungan khusus', 'Sebagai tuan rumah baru, Anda mendapatkan akses ke tim dukungan khusus.'),
-            SizedBox(height: 24),
-            const Text('Sumber informasi dan tips', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 12),
+            const SizedBox(height: 24),
+            const Text('Kami siap membantu',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _helpCard(
+              Icons.group,
+              'Bergabung dengan Klub Tuan Rumah lokal',
+              'Jalin koneksi, berkolaborasi, dan berbagi info dengan tuan rumah lain.',
+            ),
+            _helpCard(
+              Icons.support_agent,
+              'Hubungi layanan dukungan khusus',
+              'Sebagai tuan rumah baru, Anda mendapatkan akses ke tim dukungan khusus.',
+            ),
+            const SizedBox(height: 24),
+            const Text('Sumber informasi dan tips',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
             _infoCard('Kini Anda bisa melakukan lebih banyak hal di Airbnb'),
             _infoCard('Jelajahi fitur untuk tuan rumah terbaru untuk membantu...'),
           ],
@@ -157,7 +165,7 @@ class _HariIniContent extends StatelessWidget {
     );
   }
 
-  Widget _tabChip(String label) {
+  static Widget _tabChip(String label) {
     return Chip(
       label: Text(label),
       shape: const StadiumBorder(side: BorderSide(color: Colors.grey)),
@@ -165,7 +173,7 @@ class _HariIniContent extends StatelessWidget {
     );
   }
 
-  Widget _helpCard(IconData icon, String title, String subtitle) {
+  static Widget _helpCard(IconData icon, String title, String subtitle) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -193,7 +201,7 @@ class _HariIniContent extends StatelessWidget {
     );
   }
 
-  Widget _infoCard(String title) {
+  static Widget _infoCard(String title) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),

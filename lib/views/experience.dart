@@ -16,6 +16,12 @@ class ExperiencePage extends StatelessWidget {
       'location': 'Chang Phueak, Thailand',
       'price': 'Mulai Rp496.391 / tamu',
     },
+     {
+    'imageUrl': 'https://th.bing.com/th/id/OIP.VyxaqEl5sUWv-AYdCwbCOwHaE8?w=298&h=199&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+    'title': 'Jelajah kuil tua di Ayutthaya',
+    'location': 'Ayutthaya, Thailand',
+    'price': 'Mulai Rp350.000 / tamu',
+  },
   ];
 
   final List<Map<String, String>> todayExperiences = const [
@@ -30,6 +36,12 @@ class ExperiencePage extends StatelessWidget {
       'title': 'Cicipi makanan jalanan Vietnam',
       'location': 'Ho Chi Minh',
       'price': 'Mulai Rp216.545 / tamu',
+    },
+    {
+      'imageUrl': 'https://th.bing.com/th/id/OIP.SMvEWGO36Pmsn9xmuidoEwHaEK?w=320&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+      'title': 'Kelas membuat dream catcher',
+      'location': 'Bogor',
+      'price': 'Mulai Rp89.545 / tamu',
     },
   ];
 
@@ -115,27 +127,30 @@ class ExperiencePage extends StatelessWidget {
   }
 
   Widget _horizontalCardList(List<Map<String, String>> items) {
-    return SizedBox(
-      height: 220,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        padding: const EdgeInsets.only(left: 16, right: 8),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: _experienceCard(
-              item['title']!,
-              item['location']!,
-              item['price']!,
-              item['imageUrl']!,
-            ),
-          );
-        },
-      ),
-    );
-  }
+  return SizedBox(
+    height: 220,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: items.length,
+      padding: const EdgeInsets.only(left: 16, right: 8),
+      shrinkWrap: true,
+      physics: const ClampingScrollPhysics(), // <- tambahkan ini
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: _experienceCard(
+            item['title']!,
+            item['location']!,
+            item['price']!,
+            item['imageUrl']!,
+          ),
+        );
+      },
+    ),
+  );
+}
+
 
   Widget _experienceCard(
       String title, String location, String price, String imageUrl) {

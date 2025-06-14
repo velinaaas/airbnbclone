@@ -32,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Masuk Airbnb'),
-        backgroundColor: fuchsia,
+        backgroundColor: Color(0xFFFF2D87),
         foregroundColor: Colors.white,
       ),
       body: Padding(

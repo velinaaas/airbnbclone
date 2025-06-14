@@ -1,3 +1,5 @@
+import 'package:airbnbclone/pages/edit_host_page.dart';
+import 'package:airbnbclone/views/explore.dart';
 import 'package:flutter/material.dart';
 
 class MenuPage extends StatelessWidget {
@@ -6,140 +8,195 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Menu'),
+        elevation: 0,
+        toolbarHeight: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
         children: [
-          _welcomeCard(context), // <- Tambahan banner
-
-          const SizedBox(height: 16),
-          _sectionTitle('MENERIMA TAMU'),
-          _menuItem(Icons.attach_money, 'Penghasilan'),
-          _menuItem(Icons.home, 'Status properti'),
-          _menuItem(Icons.star, 'Ulasan'),
-          _menuItem(Icons.edit, 'Panduan komunitas'),
-          const SizedBox(height: 16),
-          _sectionTitle('PENGELOLAAN'),
-          _menuItem(Icons.calendar_today, 'Kalender'),
-          _menuItem(Icons.insert_chart, 'Wawasan'),
-          _menuItem(Icons.lightbulb, 'Tips dan artikel'),
-          const SizedBox(height: 16),
-          _sectionTitle('PENGATURAN'),
-          _menuItem(Icons.settings, 'Pengaturan'),
-          _menuItem(Icons.help, 'Bantuan'),
-        ],
-      ),
-    );
-  }
-
-  Widget _menuItem(IconData icon, String title) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        // Tambahkan aksi saat menu diklik jika perlu
-      },
-    );
-  }
-
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _welcomeCard(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _imageBox('https://picsum.photos/seed/1/60/60'),
-              const SizedBox(width: 8),
-              _imageBox('https://picsum.photos/seed/2/60/60'),
-              const SizedBox(width: 8),
-              _imageBox('https://picsum.photos/seed/3/60/60'),
-            ],
-          ),
           const SizedBox(height: 12),
           const Text(
-            'Pertama kalinya menggunakan Airbnb?',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            "Profil",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Temukan tips dan praktik terbaik dari para tuan rumah yang dinilai tinggi.',
-            style: TextStyle(color: Colors.grey[700]),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HalamanTips()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: BorderSide(color: Colors.grey.shade300),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+          const SizedBox(height: 16),
+
+          // Kartu Profil Pengguna (klik pindah ke edit_host_page)
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EditHostPage()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text('Mulai sekarang'),
+              child: const Column(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.black,
+                    child: Text('T', style: TextStyle(color: Colors.white, fontSize: 28)),
+                  ),
+                  SizedBox(height: 12),
+                  Text('Titis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Tuan Rumah', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _imageBox(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.network(
-        url,
-        width: 60,
-        height: 60,
-        fit: BoxFit.cover,
+          const SizedBox(height: 16),
+
+          // Kartu Perjalanan & Koneksi
+          Row(
+            children: [
+              Expanded(
+                child: _FeatureCard(
+                  title: "Perjalanan terdahulu",
+                  iconAsset: 'https://i.pinimg.com/736x/58/ad/be/58adbe4bf4bc3ffea359890aec774e80.jpg',
+                  isBaru: true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _FeatureCard(
+                  title: "Koneksi",
+                  iconAsset: 'https://img.lovepik.com/png/20231007/Cartoon-hand-drawn-men-and-women-clapping-friendship-day-illustration_117819_wh1200.png',
+                  isBaru: true,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Menjadi Tuan Rumah
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Image.network(
+                  'https://tse3.mm.bing.net/th/id/OIP.kuJuNMZGzkq87-gGn9_3hgHaE_?cb=iwc2&rs=1&pid=ImgDetMain',
+                  width: 40,
+                  height: 40,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Menjadi Tamu", style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text(
+                        "Anda bisa mulai menerima tamu dengan mudah dan mendapatkan penghasilan tambahan.",
+                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Tombol "Pindah ke mode tamu"
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExplorePage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Text("Pindah ke mode tamu"),
+          ),
+
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }
 }
 
-class HalamanTips extends StatelessWidget {
-  const HalamanTips({super.key});
+// Kartu Fitur Tambahan
+class _FeatureCard extends StatelessWidget {
+  final String title;
+  final String iconAsset;
+  final bool isBaru;
+
+  const _FeatureCard({
+    required this.title,
+    required this.iconAsset,
+    this.isBaru = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tips Airbnb')),
-      body: const Center(
-        child: Text(
-          'Selamat datang di halaman tips!',
-          style: TextStyle(fontSize: 18),
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Image.network(
+                iconAsset,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+        if (isBaru)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.blue[800],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'BARU',
+                style: TextStyle(fontSize: 10, color: Colors.white),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

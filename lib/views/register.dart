@@ -34,7 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Daftar Airbnb'),
-        backgroundColor: fuchsia,
+        backgroundColor: Color(0xFFFF2D87),
         foregroundColor: Colors.white,
       ),
       body: Padding(

@@ -8,7 +8,7 @@ class DetailPropertyPage extends StatelessWidget {
     return Scaffold(
       body: ListView(
         children: [
-          // 🖼️ Gambar Utama dengan tombol navigasi
+          // 🖼️ Gambar Utama + Navigasi
           Stack(
             children: [
               Image.network(
@@ -127,14 +127,30 @@ class DetailPropertyPage extends StatelessWidget {
                   title: Text('Tuan rumah: Rafif'),
                   subtitle: Text('HosTeladan · Tuan rumah selama 3 tahun'),
                 ),
-                SizedBox(height: 100), // ruang agar tidak ketutupan bottomNavigationBar
+
+                // 🛎️ Fasilitas
+                SizedBox(height: 16),
+                Text(
+                  'Fasilitas yang ditawarkan',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                fasilitasItem(Icons.kitchen, 'Dapur'),
+                fasilitasItem(Icons.wifi, 'Wifi'),
+                fasilitasItem(Icons.work, 'Area kerja khusus'),
+                fasilitasItem(Icons.local_parking, 'Parkir gratis di areal properti'),
+                fasilitasItem(Icons.hot_tub, 'Bak mandi air panas'),
+                fasilitasItem(Icons.warning, 'Alarm karbon monoksida', isAvailable: false),
+                fasilitasItem(Icons.smoke_free, 'Alarm asap', isAvailable: false),
+
+                SizedBox(height: 100), // agar tidak tertutup bottomNavigationBar
               ],
             ),
-          )
+          ),
         ],
       ),
 
-      // 🔘 Bawah: Harga dan Tombol Pesan
+      // 🔘 Bawah: Harga & Tombol Pesan
       bottomNavigationBar: Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -149,10 +165,10 @@ class DetailPropertyPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Rp4.068.137',
+                    'Rp4.337.650',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  Text('Untuk 2 malam · 6–8 Jun', style: TextStyle(fontSize: 12)),
+                  Text('Untuk 2 malam · 18–20 Jul', style: TextStyle(fontSize: 12)),
                   SizedBox(height: 4),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -160,7 +176,7 @@ class DetailPropertyPage extends StatelessWidget {
                       color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('🌟 Jarang ada', style: TextStyle(fontSize: 12)),
+                    child: Text('💎 Jarang ada', style: TextStyle(fontSize: 12)),
                   )
                 ],
               ),
@@ -181,6 +197,27 @@ class DetailPropertyPage extends StatelessWidget {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget Fasilitas dengan opsi dicoret
+  Widget fasilitasItem(IconData icon, String label, {bool isAvailable = true}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: isAvailable ? Colors.black : Colors.grey),
+          SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              decoration: isAvailable ? null : TextDecoration.lineThrough,
+              color: isAvailable ? Colors.black : Colors.grey,
+            ),
+          ),
+        ],
       ),
     );
   }

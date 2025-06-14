@@ -1,5 +1,4 @@
 import 'package:airbnbclone/pages/hari_ini_page.dart';
-import 'package:airbnbclone/pages/kalender_page.dart';
 import 'package:airbnbclone/pages/menu_page.dart';
 import 'package:airbnbclone/pages/tempat_page.dart';
 import 'package:airbnbclone/views/experience.dart';
@@ -45,9 +44,9 @@ class MyApp extends StatelessWidget {
         '/perjalanan': (context) => PerjalananPage(),
         '/pesan': (context) => PesanPage(),
         '/hari_ini': (context) => HariIniPage(),  
-        '/kalender': (context) => KalenderPage(),
         '/tempat': (context) => TempatPage(),
         '/menu': (context) => MenuPage(),
+
         // '/pesan': (context) => PesanPage(),
       },
     );

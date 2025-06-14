@@ -1,5 +1,7 @@
 import 'package:airbnbclone/pages/hari_ini_page.dart';
+import 'package:airbnbclone/views/edit_profil.dart';
 import 'package:flutter/material.dart';
+// import 'package:airbnbclone/pages/edit_profil.dart';
 
 
 class ProfilPage extends StatelessWidget {
@@ -25,25 +27,34 @@ class ProfilPage extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Kartu Profil Pengguna
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: const [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.black,
-                  child: Text('T', style: TextStyle(color: Colors.white, fontSize: 28)),
-                ),
-                SizedBox(height: 12),
-                Text('Titis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('Tamu', style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-          ),
+          InkWell(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const EditProfilPage()),
+    );
+  },
+  child: Container(
+    padding: const EdgeInsets.symmetric(vertical: 24),
+    decoration: BoxDecoration(
+      color: Colors.grey[100],
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: const Column(
+      children: [
+        CircleAvatar(
+          radius: 32,
+          backgroundColor: Colors.black,
+          child: Text('T', style: TextStyle(color: Colors.white, fontSize: 28)),
+        ),
+        SizedBox(height: 12),
+        Text('Titis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('Tamu', style: TextStyle(color: Colors.grey)),
+      ],
+    ),
+  ),
+),
+
 
           const SizedBox(height: 16),
 
@@ -133,7 +144,7 @@ class ProfilPage extends StatelessWidget {
         onTap: (index) {
   switch (index) {
     case 0:
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushReplacementNamed(context, '/explore');
       break;
     case 1:
       Navigator.pushReplacementNamed(context, '/favorite');
