@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
-class ExperiencePage extends StatelessWidget {
+class ExperiencePage extends StatefulWidget {
   const ExperiencePage({super.key});
+
+  @override
+  State<ExperiencePage> createState() => _ExperiencePageState();
+}
+
+class _ExperiencePageState extends State<ExperiencePage> {
+  int _selectedIndex = 0; // BottomNavigationBar index
 
   final List<Map<String, String>> airbnbOriginals = const [
     {
@@ -16,12 +23,12 @@ class ExperiencePage extends StatelessWidget {
       'location': 'Chang Phueak, Thailand',
       'price': 'Mulai Rp496.391 / tamu',
     },
-     {
-    'imageUrl': 'https://th.bing.com/th/id/OIP.VyxaqEl5sUWv-AYdCwbCOwHaE8?w=298&h=199&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-    'title': 'Jelajah kuil tua di Ayutthaya',
-    'location': 'Ayutthaya, Thailand',
-    'price': 'Mulai Rp350.000 / tamu',
-  },
+    {
+      'imageUrl': 'https://th.bing.com/th/id/OIP.VyxaqEl5sUWv-AYdCwbCOwHaE8?w=298&h=199&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+      'title': 'Jelajah kuil tua di Ayutthaya',
+      'location': 'Ayutthaya, Thailand',
+      'price': 'Mulai Rp350.000 / tamu',
+    },
   ];
 
   final List<Map<String, String>> todayExperiences = const [
@@ -44,6 +51,27 @@ class ExperiencePage extends StatelessWidget {
       'price': 'Mulai Rp89.545 / tamu',
     },
   ];
+
+  void _onBottomNavTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    switch (index) {
+      case 0:
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/favorit');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/perjalanan');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/pesan');
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, '/profil');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,35 +96,48 @@ class ExperiencePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _bottomNav(context),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.pink,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        onTap: _onBottomNavTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
+          BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
+        ],
+      ),
     );
   }
 
   Widget _searchBar(BuildContext context) {
-  return Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 370), // atur lebar maksimal di sini
-      child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, '/search'),
-        child: Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.search, color: Colors.black54),
-              SizedBox(width: 8),
-              Text("Mulai pencarian", style: TextStyle(color: Colors.black54)),
-            ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 370),
+        child: GestureDetector(
+          onTap: () => Navigator.pushNamed(context, '/search'),
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.search, color: Colors.black54),
+                SizedBox(width: 8),
+                Text("Mulai pencarian", style: TextStyle(color: Colors.black54)),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _topTab(BuildContext context) {
     return Padding(
@@ -110,7 +151,7 @@ class ExperiencePage extends StatelessWidget {
           ),
           const _TabIcon(icon: Icons.flight, label: 'Experiences', isSelected: true),
           GestureDetector(
-            onTap: () =>  Navigator.pushReplacementNamed(context, '/service'),
+            onTap: () => Navigator.pushReplacementNamed(context, '/service'),
             child: const _TabIcon(icon: Icons.notifications, label: 'Services'),
           ),
         ],
@@ -127,33 +168,31 @@ class ExperiencePage extends StatelessWidget {
   }
 
   Widget _horizontalCardList(List<Map<String, String>> items) {
-  return SizedBox(
-    height: 220,
-    child: ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: items.length,
-      padding: const EdgeInsets.only(left: 16, right: 8),
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(), // <- tambahkan ini
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: _experienceCard(
-            item['title']!,
-            item['location']!,
-            item['price']!,
-            item['imageUrl']!,
-          ),
-        );
-      },
-    ),
-  );
-}
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        padding: const EdgeInsets.only(left: 16, right: 8),
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _experienceCard(
+              item['title']!,
+              item['location']!,
+              item['price']!,
+              item['imageUrl']!,
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-
-  Widget _experienceCard(
-      String title, String location, String price, String imageUrl) {
+  Widget _experienceCard(String title, String location, String price, String imageUrl) {
     return Container(
       width: 160,
       child: Column(
@@ -174,8 +213,7 @@ class ExperiencePage extends StatelessWidget {
                 left: 5,
                 top: 5,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   color: Colors.white,
                   child: const Text(
                     "Originals",
@@ -201,40 +239,6 @@ class ExperiencePage extends StatelessWidget {
           Text(price, style: const TextStyle(fontSize: 12)),
         ],
       ),
-    );
-  }
-
-  Widget _bottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      selectedItemColor: Colors.pink,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break;
-          case 1:
-            Navigator.pushReplacementNamed(context, '/favorite');
-            break;
-          case 2:
-            Navigator.pushReplacementNamed(context, '/travel');
-            break;
-          case 3:
-            Navigator.pushReplacementNamed(context, '/message');
-            break;
-          case 4:
-            Navigator.pushReplacementNamed(context, '/profil');
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
-        BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
-        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
-      ],
     );
   }
 }

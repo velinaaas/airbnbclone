@@ -284,13 +284,13 @@ class ServicePage extends StatelessWidget {
           case 0:
             break;
           case 1:
-            Navigator.pushReplacementNamed(context, '/favorite');
+            Navigator.pushReplacementNamed(context, '/favorit');
             break;
           case 2:
-            Navigator.pushReplacementNamed(context, '/travel');
+            Navigator.pushReplacementNamed(context, '/perjalanan');
             break;
           case 3:
-            Navigator.pushReplacementNamed(context, '/message');
+            Navigator.pushReplacementNamed(context, '/pesan');
             break;
           case 4:
             Navigator.pushReplacementNamed(context, '/profil');
