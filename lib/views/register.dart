@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';  
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:airbnbclone/services/authService.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,16 +20,22 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void _register() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil!')),
-      );
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/explore');
-      });
+  void _register() async {
+  if (_formKey.currentState!.validate()) {
+    final success = await AuthService.register(
+      name: nameController.text,
+      email: emailController.text,
+      phone: phoneController.text,
+      password: passwordController.text,
+      context: context,
+    );
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
