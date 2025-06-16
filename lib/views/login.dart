@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:airbnbclone/services/authService.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,17 +13,19 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login berhasil!')),
-      );
+  void _login() async {
+  if (_formKey.currentState!.validate()) {
+    final success = await AuthService.login(
+      email: emailController.text,
+      password: passwordController.text,
+      context: context,
+    );
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/explore');
-      });
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/explore');
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
