@@ -13,7 +13,7 @@ class User {
     required this.roles,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
+    factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
@@ -22,6 +22,7 @@ class User {
       roles: List<String>.from(json['roles'] ?? []),
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {
