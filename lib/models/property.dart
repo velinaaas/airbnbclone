@@ -1,11 +1,11 @@
-import 'category.dart';
+import 'package:airbnbclone/models/category.dart';
 
 class Property {
   final int idProperty;
   final int userId;
   final String title;
   final String description;
-  final int pricePerNight;
+  final double pricePerNight;
   final String address;
   final double latitude;
   final double longitude;
@@ -15,7 +15,11 @@ class Property {
   final bool isActive;
   final String createdAt;
   final String updatedAt;
-  final Category? category; // ubah jadi nullable
+  final Category? category;
+  
+  // Tambahan dari join
+  final String? coverPhoto;
+  final double? averageRating;
 
   Property({
     required this.idProperty,
@@ -33,6 +37,8 @@ class Property {
     required this.createdAt,
     required this.updatedAt,
     this.category,
+    this.coverPhoto,
+    this.averageRating,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -41,7 +47,7 @@ class Property {
       userId: json['user_id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      pricePerNight: json['price_per_night'] ?? 0,
+      pricePerNight: double.tryParse(json['price_per_night'].toString()) ?? 0.0,
       address: json['address'] ?? '',
       latitude: double.tryParse(json['latitude'].toString()) ?? 0.0,
       longitude: double.tryParse(json['longitude'].toString()) ?? 0.0,
@@ -50,10 +56,12 @@ class Property {
       maxGuests: json['max_guests'] ?? 0,
       isActive: json['is_active'] ?? false,
       createdAt: json['created_at'] ?? '',
-      updatedAt: json['update_at'] ?? '',
-      category: json['category'] != null
+      updatedAt: json['updated_at'] ?? '',
+      category: (json['category'] != null && json['category'] is Map)
           ? Category.fromJson(json['category'])
           : null,
+      coverPhoto: json['cover_photo'],
+      averageRating: double.tryParse(json['average_rating']?.toString() ?? '0.0'),
     );
   }
 }

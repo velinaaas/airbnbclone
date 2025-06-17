@@ -55,7 +55,10 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/explore': (context) => ExplorePage(),
         '/search': (context) => SearchPage(),
-        '/detail': (context) => DetailPropertyPage(),
+        '/detail': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as int;
+          return DetailPropertyPage(propertyId: args);
+        },
         '/profil': (context) => ProfilPage(),
         '/experience': (context) => ExperiencePage(),
         '/service': (context) => ServicePage(),

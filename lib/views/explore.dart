@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'package:airbnbclone/views/detail_property.dart';
 import 'package:flutter/material.dart';
-import 'favorit.dart'; // Import halaman favorit
+import 'package:http/http.dart' as http;
+import '../models/property.dart';
+import 'favorit.dart';
 
 class ExplorePage extends StatefulWidget {
   @override
@@ -8,110 +12,175 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   int selectedTopTabIndex = 0;
+  Set<int> favoriteItems = {};
+  List<Property> properties = [];
+  bool isLoading = true;
 
-  final List<Map<String, dynamic>> popularInBandung = [
-    {
-      'imageUrl': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-      'title': 'Rumah di Kecamatan Cibeunying Kaler',
-      'price': 'Rp2.106.308 untuk 1 malam',
-      'rating': '4,91'
-    },
-    {
-      'imageUrl': 'https://ts4.mm.bing.net/th?id=OIP.R6df8KonaAoRMhP1oV_5NAHaD4&pid=15.1',
-      'title': 'Rumah di Kecamatan Lembang',
-      'price': 'Rp4.187.278 untuk 3 malam',
-      'rating': '4,96'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchProperties();
+  }
 
-  final List<Map<String, dynamic>> kualaLumpurNextMonth = [
-    {
-      'imageUrl': 'https://th.bing.com/th/id/OIP.dEIX3owbJZDCP2uxzJVPGQHaE8?w=309&h=180&c=7&r=0&o=5&cb=iwc2&dpr=1.3&pid=1.7',
-      'title': 'Kondominium di Setiawangsa',
-      'price': 'Rp6.367.278 untuk 2 malam',
-      'rating': '4,87'
-    },
-    {
-      'imageUrl': 'https://th.bing.com/th/id/OIP.27onQRg5LzalYccvQx3e3QHaFj?w=220&h=180&c=7&r=0&o=5&cb=iwc2&dpr=1.3&pid=1.7',
-      'title': 'Apartemen di Bukit Bintang',
-      'price': 'Rp1.098.223 untuk 1 malam',
-      'rating': '4,90'
-    },
-  ];
-
-  void onTopTabTap(int index) {
-    setState(() {
-      selectedTopTabIndex = index;
-    });
-
-    if (index == 1) {
-      Navigator.pushNamed(context, '/experience');
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/service');
+  Future<void> fetchProperties() async {
+    final url = Uri.parse('https://apiairbnb-production.up.railway.app/api/guest/all-properties');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        final List jsonData = jsonResponse['data'];
+        setState(() {
+          properties = jsonData.map((e) => Property.fromJson(e)).toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load properties');
+      }
+    } catch (e) {
+      print('Error fetching properties: $e');
+      setState(() => isLoading = false);
     }
   }
 
-  Widget buildCard(Map<String, dynamic> data, BuildContext context) {
-    return GestureDetector(
+  void onTopTabTap(int index) {
+    setState(() => selectedTopTabIndex = index);
+    if (index == 1) Navigator.pushNamed(context, '/experience');
+    if (index == 2) Navigator.pushNamed(context, '/service');
+  }
+
+  Widget buildCard(Property data, BuildContext context, int index) {
+    final isFavorite = favoriteItems.contains(index);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
       onTap: () {
-        Navigator.pushNamed(context, '/detail');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailPropertyPage(propertyId: data.idProperty),
+          ),
+        );
       },
       child: Container(
-        width: 180,
-        margin: EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.07),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        margin: const EdgeInsets.only(bottom: 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // PHOTO
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    data['imageUrl'],
-                    width: 180,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: AspectRatio(
+                    aspectRatio: 4 / 3,
+                    child: Image.network(
+                      data.coverPhoto ?? 'https://via.placeholder.com/800x600.png?text=No+Image',
+                      fit: BoxFit.cover,
                     ),
-                    child: Text('Pilihan tamu',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
+                if (data.isActive)
+                  Positioned(
+                    top: 14,
+                    left: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'Active',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
                 Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Icon(Icons.favorite_border, color: Colors.white),
-                )
+                  top: 14,
+                  right: 14,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      setState(() {
+                        isFavorite ? favoriteItems.remove(index) : favoriteItems.add(index);
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-            SizedBox(height: 8),
-            Text(
-              data['title'],
-              style: TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              data['price'],
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (data['rating'] != '')
-              Text(
-                '★ ${data['rating']}',
-                style: TextStyle(color: Colors.black54),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(data.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(
+                    data.address,
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 16),
+                          const SizedBox(width: 4),
+                          Text((data.averageRating ?? 0).toStringAsFixed(1),
+                              style: const TextStyle(fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black),
+                          children: [
+                            TextSpan(
+                              text: 'Rp${data.pricePerNight.toStringAsFixed(0)}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const TextSpan(text: ' / malam'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -121,16 +190,13 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget _buildSearchBar(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 400), // bebas ubah lebar di sini
+        constraints: BoxConstraints(maxWidth: 400),
         child: GestureDetector(
           onTap: () => Navigator.pushNamed(context, '/search'),
           child: Container(
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(20),
-            ),
+            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(20)),
             child: const Row(
               children: [
                 Icon(Icons.search, color: Colors.black54),
@@ -156,90 +222,52 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              GestureDetector(
-                onTap: () => onTopTabTap(0),
-                child: _TabIcon(
-                  icon: Icons.house,
-                  label: 'Homes',
-                  isSelected: selectedTopTabIndex == 0,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                  GestureDetector(
+                      onTap: () => onTopTabTap(0),
+                      child: _TabIcon(icon: Icons.house, label: 'Homes', isSelected: selectedTopTabIndex == 0)),
+                  GestureDetector(
+                      onTap: () => onTopTabTap(1),
+                      child: _TabIcon(icon: Icons.flight, label: 'Experiences', isSelected: selectedTopTabIndex == 1)),
+                  GestureDetector(
+                      onTap: () => onTopTabTap(2),
+                      child: _TabIcon(icon: Icons.miscellaneous_services, label: 'Services', isSelected: selectedTopTabIndex == 2)),
+                ]),
+                const SizedBox(height: 24),
+                const Text('Stays around the world', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 16),
+                ...properties.asMap().entries.map((e) => buildCard(e.value, context, e.key)).toList(),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Row(children: const [
+                    Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(child: Text("Display total before taxes", style: TextStyle(color: Colors.grey, fontSize: 14))),
+                  ]),
                 ),
-              ),
-              GestureDetector(
-                onTap: () => onTopTabTap(1),
-                child: _TabIcon(
-                  icon: Icons.flight,
-                  label: 'Experiences',
-                  isSelected: selectedTopTabIndex == 1,
-                ),
-              ),
-              GestureDetector(
-                onTap: () => onTopTabTap(2),
-                child: _TabIcon(
-                  icon: Icons.notifications,
-                  label: 'Services',
-                  isSelected: selectedTopTabIndex == 2,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 24),
-          Text('Penginapan populer di Bandung',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 12),
-          SizedBox(
-            height: 200,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children:
-                  popularInBandung.map((data) => buildCard(data, context)).toList(),
+                const SizedBox(height: 40),
+              ],
             ),
-          ),
-          SizedBox(height: 24),
-          Text('Tersedia bulan depan di Kuala Lumpur',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 12),
-          SizedBox(
-            height: 200,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: kualaLumpurNextMonth
-                  .map((data) => buildCard(data, context))
-                  .toList(),
-            ),
-          ),
-          SizedBox(height: 24),
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.pink[50],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text("Harga sudah mencakup semua biaya",
-                style: TextStyle(color: Colors.pink)),
-          ),
-          SizedBox(height: 40),
-        ],
-      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: Colors.pink,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              break;
+        onTap: (idx) {
+          switch (idx) {
             case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => FavoritPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => FavoritPage()));
               break;
             case 2:
               Navigator.pushNamed(context, '/perjalanan');
@@ -280,14 +308,12 @@ class _TabIcon extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: isSelected ? Colors.black : Colors.grey),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.black : Colors.grey,
-          ),
-        )
+        Text(label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? Colors.black : Colors.grey,
+            ))
       ],
     );
   }
