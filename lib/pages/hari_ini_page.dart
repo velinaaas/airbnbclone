@@ -1,3 +1,6 @@
+import 'package:airbnbclone/pages/menu_page.dart';
+import 'package:airbnbclone/pages/pesan_page.dart';
+import 'package:airbnbclone/pages/tempat_page.dart';
 import 'package:flutter/material.dart';
 
 class HariIniPage extends StatefulWidget {
@@ -8,9 +11,51 @@ class HariIniPage extends StatefulWidget {
 }
 
 class _HariIniPageState extends State<HariIniPage> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const _HariIniContent(),
+    TempatPage(),
+    PesanPage(),
+    const MenuPage(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return const _HariIniContent();
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.pink,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_box_outlined),
+            label: 'Hari ini',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.house),
+            label: 'Telusuri',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Pesan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: 'Menu',
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -71,7 +116,10 @@ class _HariIniContentState extends State<_HariIniContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Hari Ini')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // Menghilangkan tombol back
+        title: const Text('Hari Ini'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
         child: Column(

@@ -1,5 +1,6 @@
-import 'package:airbnbclone/pages/hari_ini_page.dart';
-import 'package:airbnbclone/pages/pesan_page.dart';
+import 'package:airbnbclone/pages/hari_ini_page.dart' as hari_ini hide MenuPage;
+import 'package:airbnbclone/pages/hari_ini_page.dart' hide MenuPage;
+import 'package:airbnbclone/pages/pesan_page.dart' as pesan;
 import 'package:airbnbclone/pages/tempat_page.dart';
 import 'package:airbnbclone/views/detail_property.dart';
 import 'package:airbnbclone/views/experience.dart';
@@ -14,7 +15,6 @@ import 'package:airbnbclone/views/login.dart';
 import 'package:airbnbclone/views/register.dart';
 import 'package:airbnbclone/views/explore.dart'; // contoh home setelah login
 import 'package:airbnbclone/pages/menu_page.dart';
-import 'package:airbnbclone/pages/hari_ini_page.dart';
  // jika ingin ke menu langsung
 
 void main() {
@@ -66,8 +66,8 @@ class MyApp extends StatelessWidget {
         '/service': (context) => ServicePage(),
         '/favorit': (context) => FavoritPage(),
         '/perjalanan': (context) => PerjalananPage(),
-        '/pesan': (context) => PesanPage(),
-        '/hari_ini': (context) => HariIniPage(),  
+        '/pesan': (context) => pesan.PesanPage(),
+        '/hari_ini': (context) => hari_ini.HariIniPage(),
         '/tempat': (context) => TempatPage(),
         '/menu': (context) => MenuPage(),
 
