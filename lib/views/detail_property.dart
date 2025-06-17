@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'booking.dart'; // Pastikan file booking.dart sudah ada
 
 class DetailPropertyPage extends StatelessWidget {
   const DetailPropertyPage({super.key});
@@ -184,7 +185,10 @@ class DetailPropertyPage extends StatelessWidget {
             SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {
-                // Tambahkan aksi booking di sini
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const BookingPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink,

@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class PerjalananPage extends StatelessWidget {
-  const PerjalananPage({super.key});
+  final DateTimeRange dateRange;
+  final int adults;
+  final int children;
+  final int infants;
+
+  PerjalananPage({
+    super.key,
+    DateTimeRange? dateRange,
+    this.adults = 1,
+    this.children = 0,
+    this.infants = 0,
+  }) : dateRange = dateRange ??
+        DateTimeRange(
+          start: DateTime.now(),
+          end: DateTime.now().add(const Duration(days: 3)),
+        );
 
   @override
   Widget build(BuildContext context) {
+    final dateFormat = DateFormat('dd MMM yyyy');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -14,49 +32,66 @@ class PerjalananPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
-        automaticallyImplyLeading: false, // Menghilangkan icon back
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Expanded(
-              child: Center(
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDummyTrip(),
-                    const SizedBox(height: 32),
                     const Text(
-                      "Rancang perjalanan yang sempurna",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                      'Detail Booking',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Telusuri penginapan, pengalaman, dan layanan. "
-                      "Ketika Anda memesan, reservasi Anda akan terlihat di sini.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.black54),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/explore');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                        backgroundColor: Colors.pinkAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: Color(0xFFFF2D87)),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${dateFormat.format(dateRange.start)} - ${dateFormat.format(dateRange.end)}',
+                          style: const TextStyle(fontSize: 16),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(Icons.people, color: Color(0xFFFF2D87)),
+                        const SizedBox(width: 10),
+                        Text(
+                          '$adults Dewasa, $children Anak-anak, $infants Bayi',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
-                        'Mulai sekarang',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Booking berhasil! Silakan tunggu konfirmasi dari host.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -67,7 +102,7 @@ class PerjalananPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2, // Indeks untuk halaman Perjalanan
+        currentIndex: 2,
         selectedItemColor: Colors.pink,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
@@ -97,64 +132,6 @@ class PerjalananPage extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
         ],
       ),
-    );
-  }
-
-  Widget _buildDummyTrip() {
-    final dummyImages = [
-      'https://ts4.mm.bing.net/th?id=OIP.R6df8KonaAoRMhP1oV_5NAHaD4&pid=15.1',
-      'https://th.bing.com/th/id/OIP.dZSre7skbvrJQtWjd4kAXAHaE7?w=283&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7',
-      'https://th.bing.com/th/id/OIP.LCzgP22hKlDFPkuwfw_CVgHaE3?w=268&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7',
-    ];
-
-    return Column(
-      children: dummyImages.map((url) {
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade200,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-                child: Image.network(
-                  url,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(height: 10, width: 120, color: Colors.grey.shade300),
-                      const SizedBox(height: 8),
-                      Container(height: 10, width: 80, color: Colors.grey.shade300),
-                    ],
-                  ),
-                ),
-              )
-            ],
-          ),
-        );
-      }).toList(),
     );
   }
 }
