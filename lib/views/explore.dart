@@ -236,7 +236,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: _TabIcon(icon: Icons.flight, label: 'Experiences', isSelected: selectedTopTabIndex == 1)),
                   GestureDetector(
                       onTap: () => onTopTabTap(2),
-                      child: _TabIcon(icon: Icons.miscellaneous_services, label: 'Services', isSelected: selectedTopTabIndex == 2)),
+                      child: _TabIcon(icon: Icons.room_service, label: 'Services', isSelected: selectedTopTabIndex == 2)),
                 ]),
                 const SizedBox(height: 24),
                 const Text('Stays around the world', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),

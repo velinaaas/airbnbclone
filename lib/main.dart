@@ -13,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:airbnbclone/views/login.dart';
 import 'package:airbnbclone/views/register.dart';
 import 'package:airbnbclone/views/explore.dart'; // contoh home setelah login
-import 'package:airbnbclone/pages/menu_page.dart'; // jika ingin ke menu langsung
+import 'package:airbnbclone/pages/menu_page.dart';
+import 'package:airbnbclone/pages/hari_ini_page.dart';
+ // jika ingin ke menu langsung
 
 void main() {
   runApp(const MyApp());

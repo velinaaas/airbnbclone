@@ -152,7 +152,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
           const _TabIcon(icon: Icons.flight, label: 'Experiences', isSelected: true),
           GestureDetector(
             onTap: () => Navigator.pushReplacementNamed(context, '/service'),
-            child: const _TabIcon(icon: Icons.notifications, label: 'Services'),
+            child: const _TabIcon(icon: Icons.room_service, label: 'Services'),
           ),
         ],
       ),
