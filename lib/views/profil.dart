@@ -1,4 +1,5 @@
 import 'package:airbnbclone/pages/hari_ini_page.dart';
+import 'package:airbnbclone/services/authService.dart';
 import 'package:airbnbclone/views/edit_profil.dart';
 import 'package:flutter/material.dart';
 // import 'package:airbnbclone/pages/edit_profil.dart';
@@ -116,20 +117,40 @@ class ProfilPage extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Tombol "Pindah ke mode tuan rumah"
+
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
+            onPressed: () async {
+            final success = await AuthService.switchToHostRole(context);
+            if (success) {
+              Navigator.pushReplacement(
+              context,
                 MaterialPageRoute(builder: (context) => HariIniPage()),
               );
+            }
+          },
+          style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        child: const Text("Pindah ke mode tuan rumah"),
+        ),
+          const SizedBox(height: 40),
+
+          ElevatedButton.icon(
+            onPressed: () async {
+              await AuthService.logout();
+              Navigator.pushReplacementNamed(context, '/login');
             },
+            icon: const Icon(Icons.logout),
+            label: const Text("Logout"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text("Pindah ke mode tuan rumah"),
           ),
 
           const SizedBox(height: 40),

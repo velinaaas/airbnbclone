@@ -4,7 +4,6 @@ import 'package:airbnbclone/models/user_models.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_models.dart';
 
 class AuthService {
   static const String _baseUrl = 'https://apiairbnb-production.up.railway.app/api/auth';
@@ -53,7 +52,7 @@ class AuthService {
   }
 
   // LOGIN
-  static Future<bool> login({
+    static Future<bool> login({
     required String email,
     required String password,
     required BuildContext context,
@@ -73,11 +72,19 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token'];
-        final userData = data['user'];
+        final roles = List<String>.from(data['roles'] ?? []);
+
+        final dummyUser = {
+          "id": 0,
+          "name": email.split('@')[0], // nama dari email
+          "email": email,
+          "phone": "",
+          "roles": roles
+        };
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
-        await prefs.setString('user', jsonEncode(userData));
+        await prefs.setString('user', jsonEncode(dummyUser));
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login berhasil!')),
@@ -85,7 +92,7 @@ class AuthService {
         return true;
       } else {
         final resBody = jsonDecode(response.body);
-        String message = resBody['message'] ?? 'Login gagal';
+        String message = resBody['message'] ?? resBody['error'] ?? 'Login gagal';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $message')),
         );
@@ -94,29 +101,36 @@ class AuthService {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
-      return false;
-    }
+    );
+    return false;
   }
+}
 
-  // Ambil data user dari shared preferences
+
   static Future<User?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
+    print("Token: ${prefs.getString('token')}");
+    print("User JSON: ${prefs.getString('user')}");
+
     final userJson = prefs.getString('user');
     if (userJson != null) {
-      return User.fromJson(jsonDecode(userJson));
+      try {
+        final data = jsonDecode(userJson) as Map<String, dynamic>;
+        return User.fromJson(data);
+      } catch (e) {
+        print('Gagal parsing user: $e');
+      }
     }
     return null;
   }
 
-  // Logout: hapus token dan user
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('user');
-  }
-  
-static Future<bool> switchToHostRole(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear(); // Hapus semua token & user lama
+}
+
+
+  static Future<bool> switchToHostRole(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
   final userJson = prefs.getString('user');
@@ -129,30 +143,18 @@ static Future<bool> switchToHostRole(BuildContext context) async {
   }
 
   try {
-    // Parse user data dengan null safety
-    Map<String, dynamic>? userData;
-    try {
-      userData = jsonDecode(userJson) as Map<String, dynamic>?;
-    } catch (e) {
-      print('Error parsing user JSON: $e');
+    final decoded = jsonDecode(userJson);
+    if (decoded == null || decoded is! Map<String, dynamic>) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data user tidak valid, silakan login ulang.')),
+        const SnackBar(content: Text('User tidak valid. Silakan login ulang.')),
       );
       return false;
     }
 
-    if (userData == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data user kosong, silakan login ulang.')),
-      );
-      return false;
-    }
-
-    final user = User.fromJson(userData);
-    final url = Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role');
+    final user = User.fromJson(decoded);
 
     final response = await http.post(
-      url,
+      Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -160,74 +162,34 @@ static Future<bool> switchToHostRole(BuildContext context) async {
       body: jsonEncode({'role_id': 2}),
     );
 
-    print('Response status code: ${response.statusCode}');
-    print('Response body: "${response.body}"');
-    print('Response headers: ${response.headers}');
-
     if (response.statusCode == 200) {
-      // Success case
-      final updatedUser = user.toJson();
-      
-      // Pastikan roles ada dan merupakan List
-      if (updatedUser['roles'] == null) {
-        updatedUser['roles'] = <String>[];
+      List<String> updatedRoles = List<String>.from(user.roles);
+      if (!updatedRoles.contains('host')) {
+        updatedRoles.add('host');
       }
-      
-      // Convert ke List<String> jika perlu
-      List<String> roles = [];
-      if (updatedUser['roles'] is List) {
-        roles = List<String>.from(updatedUser['roles']);
-      }
-      
-      if (!roles.contains('host')) {
-        roles.add('host');
-      }
-      
-      updatedUser['roles'] = roles;
-      
-      await prefs.setString('user', jsonEncode(updatedUser));
+
+      final updatedUser = User(
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        roles: updatedRoles,
+      );
+
+      await prefs.setString('user', jsonEncode(updatedUser.toJson()));
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sekarang kamu adalah Tuan Rumah!')),
       );
       return true;
     } else {
-      // Error case - handle response body safely
-      String errorMessage = 'Perubahan role gagal';
-      
-      // Check if response body exists and is not empty
-      if (response.body.isNotEmpty) {
-        try {
-          // Try to parse as JSON
-          final responseData = jsonDecode(response.body);
-          
-          if (responseData != null) {
-            // Safe casting with null check
-            if (responseData is Map<String, dynamic>) {
-              errorMessage = responseData['message']?.toString() ?? errorMessage;
-            } else if (responseData is String) {
-              errorMessage = responseData;
-            }
-          }
-        } catch (jsonError) {
-          // If JSON parsing fails, use raw response or default message
-          print('JSON decode error: $jsonError');
-          if (response.body.length < 200) {
-            // Only use raw response if it's reasonably short
-            errorMessage = response.body;
-          }
-        }
-      }
-      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $errorMessage')),
+        SnackBar(content: Text('Gagal switch role: ${response.body}')),
       );
       return false;
     }
-  } catch (e, stackTrace) {
-    print('Exception in switchToHostRole: $e');
-    print('Stack trace: $stackTrace');
-    
+  } catch (e) {
+    print('Error switchRole: $e');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
     );
