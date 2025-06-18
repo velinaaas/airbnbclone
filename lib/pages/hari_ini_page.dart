@@ -43,7 +43,7 @@ class _HariIniPageState extends State<HariIniPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.house),
-            label: 'Telusuri',
+            label: 'Tempat',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
