@@ -1,9 +1,52 @@
-import 'package:airbnbclone/pages/edit_host_page.dart';
 import 'package:airbnbclone/views/explore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MenuPage extends StatelessWidget {
+class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
+
+  @override
+  State<MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  String name = '';
+  String email = '';
+  String phone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
+
+  Future<void> fetchUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final url = Uri.parse('https://apiairbnb-production.up.railway.app/api/users/profile');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        name = data['name'] ?? '';
+        email = data['email'] ?? '';
+        phone = data['phone'] ?? '';
+      });
+    } else {
+      print('Gagal mengambil profil: ${response.body}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,32 +67,24 @@ class MenuPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Kartu Profil Pengguna (klik pindah ke edit_host_page)
-          InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const EditHostPage()),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Column(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Colors.black,
-                    child: Text('T', style: TextStyle(color: Colors.white, fontSize: 28)),
-                  ),
-                  SizedBox(height: 12),
-                  Text('Titis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('Tuan Rumah', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
+          // Kartu Profil Pengguna (tidak bisa diklik)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.black,
+                  child: Text('T', style: TextStyle(color: Colors.white, fontSize: 28)),
+                ),
+                const SizedBox(height: 12),
+                Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Tuan Rumah', style: TextStyle(color: Colors.grey)),
+              ],
             ),
           ),
 
@@ -78,7 +113,7 @@ class MenuPage extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Menjadi Tuan Rumah
+          // Menjadi Tamu
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

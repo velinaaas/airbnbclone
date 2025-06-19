@@ -50,8 +50,8 @@ class _HariIniPageState extends State<HariIniPage> {
             label: 'Pesan',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'Menu',
+            icon: Icon(Icons.person_outline),
+            label: 'Profil',
           ),
         ],
       ),
