@@ -1,6 +1,7 @@
 // ignore: file_names
 import 'dart:convert';
 import 'package:airbnbclone/models/user_models.dart';
+import 'package:airbnbclone/models/user_profil.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   static const String _baseUrl = 'https://apiairbnb-production.up.railway.app/api/auth';
 
-  // REGISTER
+  // ==================== REGISTER ====================
   static Future<bool> register({
     required String name,
     required String email,
@@ -51,8 +52,8 @@ class AuthService {
     }
   }
 
-  // LOGIN
-    static Future<bool> login({
+  // ==================== LOGIN ====================
+  static Future<bool> login({
     required String email,
     required String password,
     required BuildContext context,
@@ -76,7 +77,7 @@ class AuthService {
 
         final dummyUser = {
           "id": 0,
-          "name": email.split('@')[0], // nama dari email
+          "name": email.split('@')[0],
           "email": email,
           "phone": "",
           "roles": roles
@@ -101,17 +102,14 @@ class AuthService {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Terjadi kesalahan: $e')),
-    );
-    return false;
+      );
+      return false;
+    }
   }
-}
 
-
+  // ==================== GET USER DUMMY ====================
   static Future<User?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    print("Token: ${prefs.getString('token')}");
-    print("User JSON: ${prefs.getString('user')}");
-
     final userJson = prefs.getString('user');
     if (userJson != null) {
       try {
@@ -124,76 +122,100 @@ class AuthService {
     return null;
   }
 
+  // ==================== LOGOUT ====================
   static Future<void> logout() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear(); // Hapus semua token & user lama
-}
-
-
-  static Future<bool> switchToHostRole(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-  final userJson = prefs.getString('user');
-
-  if (token == null || userJson == null || userJson.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data user rusak, silakan login ulang.')),
-    );
-    return false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
   }
 
-  try {
-    final decoded = jsonDecode(userJson);
-    if (decoded == null || decoded is! Map<String, dynamic>) {
+  // ==================== SWITCH ROLE TUAN RUMAH ====================
+  static Future<bool> switchToHostRole(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userJson = prefs.getString('user');
+
+    if (token == null || userJson == null || userJson.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User tidak valid. Silakan login ulang.')),
+        const SnackBar(content: Text('Data user rusak, silakan login ulang.')),
       );
       return false;
     }
 
-    final user = User.fromJson(decoded);
+    try {
+      final decoded = jsonDecode(userJson);
+      if (decoded == null || decoded is! Map<String, dynamic>) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User tidak valid. Silakan login ulang.')),
+        );
+        return false;
+      }
 
-    final response = await http.post(
-      Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
+      final user = User.fromJson(decoded);
+
+      final response = await http.post(
+        Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'role_id': 2}),
+      );
+
+      if (response.statusCode == 200) {
+        List<String> updatedRoles = List<String>.from(user.roles);
+        if (!updatedRoles.contains('host')) {
+          updatedRoles.add('host');
+        }
+
+        final updatedUser = User(
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          roles: updatedRoles,
+        );
+
+        await prefs.setString('user', jsonEncode(updatedUser.toJson()));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sekarang kamu adalah Tuan Rumah!')),
+        );
+        return true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal switch role: ${response.body}')),
+        );
+        return false;
+      }
+    } catch (e) {
+      print('Error switchRole: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
+      );
+      return false;
+    }
+  }
+
+  // ==================== GET PROFILE ASLI dari API ====================
+  static Future<UserProfile?> getUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return null;
+
+    final response = await http.get(
+      Uri.parse('https://apiairbnb-production.up.railway.app/api/users/profile'),
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({'role_id': 2}),
     );
 
     if (response.statusCode == 200) {
-      List<String> updatedRoles = List<String>.from(user.roles);
-      if (!updatedRoles.contains('host')) {
-        updatedRoles.add('host');
-      }
-
-      final updatedUser = User(
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        roles: updatedRoles,
-      );
-
-      await prefs.setString('user', jsonEncode(updatedUser.toJson()));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sekarang kamu adalah Tuan Rumah!')),
-      );
-      return true;
+      final jsonData = json.decode(response.body);
+      return UserProfile.fromJson(jsonData);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal switch role: ${response.body}')),
-      );
-      return false;
+      print('Gagal ambil profil: ${response.body}');
+      return null;
     }
-  } catch (e) {
-    print('Error switchRole: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
-    );
-    return false;
   }
-}
 }
