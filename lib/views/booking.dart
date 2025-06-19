@@ -1,9 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'perjalanan.dart'; // pastikan import ini sesuai path file kamu
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'perjalanan.dart';
 
 class BookingPage extends StatefulWidget {
-  const BookingPage({Key? key}) : super(key: key);
+  final int propertyId;
+
+  const BookingPage({Key? key, required this.propertyId}) : super(key: key);
 
   @override
   State<BookingPage> createState() => _BookingPageState();
@@ -53,6 +58,76 @@ class _BookingPageState extends State<BookingPage> {
       if (type == 'child' && children > 0) children--;
       if (type == 'infant' && infants > 0) infants--;
     });
+  }
+
+  Future<void> _submitBooking() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Token tidak ditemukan. Silakan login ulang.")),
+      );
+      return;
+    }
+
+    final url = Uri.parse("https://apiairbnb-production.up.railway.app/api/bookings/book");
+    final body = {
+      "property_id": widget.propertyId,
+      "check_in": selectedDateRange!.start.toIso8601String().substring(0, 10),
+      "check_out": selectedDateRange!.end.toIso8601String().substring(0, 10),
+      "guests": (adults + children + infants)
+    };
+
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 201) {
+      final json = jsonDecode(response.body);
+      final booking = json["booking"];
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Berhasil Dipesan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Booking ID: ${booking['id_booking']}"),
+              Text("Status: ${booking['status']}"),
+              Text("Tanggal: ${booking['start_date'].substring(0, 10)} - ${booking['end_date'].substring(0, 10)}"),
+              Text("Total: Rp ${booking['total_price']}"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PerjalananPage(),
+                  ),
+                );
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      final err = jsonDecode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal booking: ${err['message']}")),
+      );
+    }
   }
 
   Widget _guestCounter(String title, int count, VoidCallback onAdd, VoidCallback onRemove) {
@@ -151,37 +226,7 @@ class _BookingPageState extends State<BookingPage> {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: selectedDateRange == null
-                  ? null
-                  : () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Berhasil Dipesan'),
-                          content: const Text(
-                              'Pemesanan Anda berhasil! Silakan tunggu konfirmasi dari host.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(); // Tutup popup
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PerjalananPage(
-                                      dateRange: selectedDateRange!,
-                                      adults: adults,
-                                      children: children,
-                                      infants: infants,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+              onPressed: selectedDateRange == null ? null : _submitBooking,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF2D87),
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),

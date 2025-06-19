@@ -1,23 +1,46 @@
+import 'dart:convert';
+import 'package:airbnbclone/models/bookings_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class PerjalananPage extends StatelessWidget {
-  final DateTimeRange dateRange;
-  final int adults;
-  final int children;
-  final int infants;
+class PerjalananPage extends StatefulWidget {
+  const PerjalananPage({Key? key}) : super(key: key);
 
-  PerjalananPage({
-    super.key,
-    DateTimeRange? dateRange,
-    this.adults = 1,
-    this.children = 0,
-    this.infants = 0,
-  }) : dateRange = dateRange ??
-        DateTimeRange(
-          start: DateTime.now(),
-          end: DateTime.now().add(const Duration(days: 3)),
-        );
+  @override
+  State<PerjalananPage> createState() => _PerjalananPageState();
+}
+
+class _PerjalananPageState extends State<PerjalananPage> {
+  late Future<List<Booking>> _bookingsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bookingsFuture = fetchBookings();
+  }
+
+  Future<List<Booking>> fetchBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    final uri = Uri.parse("https://apiairbnb-production.up.railway.app/api/guest/bookings");
+
+    final resp = await http.get(uri, headers: {
+      "Authorization": "Bearer $token",
+      "Content-Type": "application/json"
+    });
+
+    if (resp.statusCode == 200) {
+      final json = jsonDecode(resp.body);
+      final list = (json['bookings'] as List)
+          .map((e) => Booking.fromJson(e))
+          .toList();
+      return list;
+    } else {
+      throw Exception("Failed to load bookings: ${resp.statusCode}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,81 +48,86 @@ class PerjalananPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Perjalanan',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Riwayat Booking'),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
-        automaticallyImplyLeading: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
+      body: FutureBuilder<List<Booking>>(
+        future: _bookingsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData && snapshot.data!.isEmpty) {
+            return const Center(child: Text('Belum ada riwayat booking'));
+          }
+
+          final bookings = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: bookings.length,
+            itemBuilder: (ctx, i) {
+              final b = bookings[i];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Detail Booking',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today, color: Color(0xFFFF2D87)),
-                        const SizedBox(width: 10),
-                        Text(
-                          '${dateFormat.format(dateRange.start)} - ${dateFormat.format(dateRange.end)}',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Icon(Icons.people, color: Color(0xFFFF2D87)),
-                        const SizedBox(width: 10),
-                        Text(
-                          '$adults Dewasa, $children Anak-anak, $infants Bayi',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    Container(
+                    Image.network(b.property.coverImage,
+                        width: double.infinity, height: 180, fit: BoxFit.cover),
+                    Padding(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Booking berhasil! Silakan tunggu konfirmasi dari host.',
-                              style: TextStyle(fontSize: 14),
-                            ),
+                          Text(b.property.title,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text(b.property.address,
+                              style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                          const SizedBox(height: 12),
+                          Text(
+                            '${dateFormat.format(b.startDate)} - ${dateFormat.format(b.endDate)}',
+                            style: const TextStyle(fontSize: 14),
                           ),
+                          const SizedBox(height: 4),
+                          Text('Rp ${b.totalPrice}',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          _buildStatusRow(b.status, b.payment),
+                            if (b.status == 'completed') ...[
+                              SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/tulis-ulasan',
+                                    arguments: {
+                                      'propertyId': b.property.id,
+                                      'bookingId': b.id,
+                                      },
+                                    );
+                                  },
+                                icon: Icon(Icons.rate_review),
+                                label: Text("Tulis Ulasan"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.pink,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
                         ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
+              );
+            },
+          );
+        },
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
@@ -107,22 +135,8 @@ class PerjalananPage extends StatelessWidget {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/explore');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/favorit');
-              break;
-            case 2:
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/pesan');
-              break;
-            case 4:
-              Navigator.pushNamed(context, '/profil');
-              break;
-          }
+          const routes = ['/explore','/favorit','/perjalanan','/pesan','/profil'];
+          if (index != 2) Navigator.pushNamed(context, routes[index]);
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
@@ -132,6 +146,21 @@ class PerjalananPage extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusRow(String status, dynamic payment) {
+    final isPaid = payment != null;
+    return Row(
+      children: [
+        Icon(isPaid ? Icons.check_circle : Icons.hourglass_bottom,
+            color: isPaid ? Colors.green : Colors.orange),
+        const SizedBox(width: 6),
+        Text(
+          isPaid ? 'Dibayar' : 'Status: ${status[0].toUpperCase()}${status.substring(1)}',
+          style: TextStyle(color: isPaid ? Colors.green : Colors.orange),
+        ),
+      ],
     );
   }
 }

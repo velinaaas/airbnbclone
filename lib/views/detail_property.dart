@@ -553,7 +553,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => BookingPage()),
+                      MaterialPageRoute(builder: (_) => BookingPage(propertyId: widget.propertyId)),
                     );
                   },
                   style: ElevatedButton.styleFrom(
