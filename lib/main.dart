@@ -7,6 +7,7 @@ import 'package:airbnbclone/views/experience.dart';
 import 'package:airbnbclone/views/favorit.dart';
 import 'package:airbnbclone/views/perjalanan.dart';
 import 'package:airbnbclone/views/profil.dart';
+import 'package:airbnbclone/views/review.dart';
 import 'package:airbnbclone/views/search.dart';
 import 'package:airbnbclone/views/service.dart';
 import 'package:flutter/material.dart';
@@ -70,8 +71,7 @@ class MyApp extends StatelessWidget {
         '/hari_ini': (context) => hari_ini.HariIniPage(),
         '/tempat': (context) => TempatPage(),
         '/menu': (context) => MenuPage(),
-
-        // '/pesan': (context) => PesanPage(),
+        '/tulis-ulasan': (context) => const WriteReviewPage(),
       },
     );
   }
