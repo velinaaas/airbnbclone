@@ -219,3 +219,61 @@ class AuthService {
     }
   }
 }
+
+Future<bool> switchToGuestRole(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final userJson = prefs.getString('user');
+
+  if (token == null || userJson == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Silakan login ulang.')),
+    );
+    return false;
+  }
+
+  try {
+    final decoded = jsonDecode(userJson);
+    final user = User.fromJson(decoded);
+
+    final response = await http.post(
+      Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'role_id': 1}), // 1 = guest
+    );
+
+    if (response.statusCode == 200) {
+      List<String> updatedRoles = List<String>.from(user.roles);
+      if (!updatedRoles.contains('guest')) {
+        updatedRoles.add('guest');
+      }
+
+      final updatedUser = User(
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        roles: updatedRoles,
+      );
+
+      await prefs.setString('user', jsonEncode(updatedUser.toJson()));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sekarang kamu dalam mode Tamu.')),
+      );
+      return true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal switch ke tamu: ${response.body}')),
+      );
+      return false;
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Terjadi kesalahan: $e')),
+    );
+    return false;
+  }
+}

@@ -2,6 +2,7 @@ import 'package:airbnbclone/pages/hari_ini_page.dart' as hari_ini hide MenuPage;
 import 'package:airbnbclone/pages/hari_ini_page.dart' hide MenuPage;
 import 'package:airbnbclone/pages/pesan_page.dart' as pesan;
 import 'package:airbnbclone/pages/tempat_page.dart';
+import 'package:airbnbclone/views/SplashScreen.dart';
 import 'package:airbnbclone/views/detail_property.dart';
 import 'package:airbnbclone/views/experience.dart';
 import 'package:airbnbclone/views/favorit.dart';
@@ -25,34 +26,16 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token') != null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Airbnb Clone',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 255, 255, 255)),
         useMaterial3: true,
       ),
-      home: FutureBuilder<bool>(
-        future: isLoggedIn(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          } else if (snapshot.hasData && snapshot.data == true) {
-            return ExplorePage(); // atau MenuPage() atau halaman setelah login
-          } else {
-            return const LoginPage();
-          }
-        },
-      ),
+      home: const SplashScreen(), // ini diarahkan ke splash screen
       routes: {
         '/register': (context) => const RegisterPage(),
         '/login': (context) => const LoginPage(),

@@ -1,4 +1,6 @@
+import 'package:airbnbclone/services/authService.dart' as AuthService;
 import 'package:airbnbclone/views/explore.dart';
+import 'package:airbnbclone/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -149,12 +151,16 @@ class _MenuPageState extends State<MenuPage> {
 
           // Tombol "Pindah ke mode tamu"
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ExplorePage()),
+            onPressed: () async {
+              bool success = await AuthService.switchToGuestRole(context);
+            if (success) {
+              Navigator.pushReplacement(
+              context,
+                MaterialPageRoute(builder: (_) => ExplorePage()),
               );
-            },
+            }
+          },
+
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
@@ -163,7 +169,26 @@ class _MenuPageState extends State<MenuPage> {
             ),
             child: const Text("Pindah ke mode tamu"),
           ),
-
+          // Tombol Logout
+            ElevatedButton.icon(
+              onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              Navigator.pushAndRemoveUntil(
+              context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
+            },
+            icon: const Icon(Icons.logout),
+            label: const Text("Keluar / Logout"),
+            style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
           const SizedBox(height: 40),
         ],
       ),
