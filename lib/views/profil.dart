@@ -201,7 +201,7 @@ class _ProfilPageState extends State<ProfilPage> {
               Navigator.pushReplacementNamed(context, '/explore');
               break;
             case 1:
-              Navigator.pushReplacementNamed(context, '/favorite');
+              Navigator.pushReplacementNamed(context, '/favorit');
               break;
             case 2:
               Navigator.pushReplacementNamed(context, '/perjalanan');

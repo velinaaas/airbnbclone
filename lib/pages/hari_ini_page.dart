@@ -159,7 +159,7 @@ class _HariIniContentState extends State<_HariIniContent> {
                   const SizedBox(width: 8),
                   _tabChip('Selesai (${pesananSelesai.length})'),
                   const SizedBox(width: 8),
-                  _tabChip('Menunggu ulasan tamu (0)'),
+                  _tabChip('Ulasan tamu (0)'),
                 ],
               ),
             ),
