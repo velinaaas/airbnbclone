@@ -26,16 +26,19 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 }
+static const Color airbnbPink = Color(0xFFFF5A5F);
+  static const Color airbnbDark = Color(0xFF484848);
+  static const Color airbnbGray = Color(0xFF767676);
 
   @override
   Widget build(BuildContext context) {
-    const Color fuchsia = Color(0xFFFF2D87);
+    const Color airbnbPink = Color(0xFFFF5A5F);
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Masuk Airbnb'),
-        backgroundColor: Color(0xFFFF2D87),
+        backgroundColor: airbnbPink,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -49,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: fuchsia,
+                  color: airbnbPink,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -60,10 +63,10 @@ class _LoginPageState extends State<LoginPage> {
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email, color: fuchsia),
+                  prefixIcon: const Icon(Icons.email, color: airbnbPink),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: fuchsia),
+                    borderSide: const BorderSide(color: airbnbPink),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -79,10 +82,10 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock, color: fuchsia),
+                  prefixIcon: const Icon(Icons.lock, color: airbnbPink),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: fuchsia),
+                    borderSide: const BorderSide(color: airbnbPink),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -95,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: fuchsia,
+                  backgroundColor: airbnbPink,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -117,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: const Text(
                   'Belum punya akun? Daftar di sini',
                   style: TextStyle(
-                    color: fuchsia,
+                    color: airbnbPink,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

@@ -1,7 +1,13 @@
-import 'package:airbnbclone/pages/menu_page.dart';
-import 'package:airbnbclone/pages/pesan_page.dart';
-import 'package:airbnbclone/pages/tempat_page.dart';
+// Pastikan sudah menambahkan paket `http` dan `shared_preferences` di pubspec.yaml
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:airbnbclone/pages/tempat_page.dart';
+import 'package:airbnbclone/pages/pesan_page.dart';
+import 'package:airbnbclone/pages/menu_page.dart';
+import 'package:intl/intl.dart';
 
 class HariIniPage extends StatefulWidget {
   const HariIniPage({super.key});
@@ -23,35 +29,36 @@ class _HariIniPageState extends State<HariIniPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.pink,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: const Color(0xFFFF5A5F), // Airbnb pink
+        unselectedItemColor: Colors.grey[600],
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        backgroundColor: Colors.white,
+        elevation: 8,
+        onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_box_outlined),
-            label: 'Hari ini',
+            icon: Icon(Icons.check_box_outlined), 
+            label: 'Hari ini'
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.house),
-            label: 'Tempat',
+            icon: Icon(Icons.house_outlined), 
+            label: 'Tempat'
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Pesan',
+            icon: Icon(Icons.chat_bubble_outline), 
+            label: 'Pesan'
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
+            icon: Icon(Icons.person_outline), 
+            label: 'Profil'
           ),
         ],
       ),
@@ -67,276 +74,621 @@ class _HariIniContent extends StatefulWidget {
 }
 
 class _HariIniContentState extends State<_HariIniContent> {
-  String selectedTab = '';
-  List<Map<String, String>> akanCheckout = [
-    {'name': 'Ahmad Yusuf', 'detail': 'Villa Mawar, 17-19 Juni 2025'},
-    {'name': 'Lia Putri', 'detail': 'Apartemen Sakura, 18-20 Juni 2025'},
-  ];
-  List<Map<String, String>> tamuSaatIni = [];
-  List<Map<String, String>> pesananSelesai = [];
+  String selectedTab = 'pending';
+  bool _loading = false;
+  List<dynamic> bookings = [];
+  List<dynamic> reviews = [];
+  final String baseUrl = 'https://apiairbnb-production.up.railway.app/api/host';
+  String? _token;
 
-  void _selectTab(String tab) {
-    setState(() {
-      selectedTab = tab;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _init();
   }
 
-  void _konfirmasiPesanan(Map<String, String> pesanan) {
-    setState(() {
-      akanCheckout.remove(pesanan);
-      tamuSaatIni.add(pesanan);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Pesanan ${pesanan['name']} diterima.'),
-      duration: const Duration(seconds: 2),
-    ));
+  Future<void> _init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('token');
+    await fetchBookings();
   }
 
-  void _batalkanPesanan(Map<String, String> pesanan) {
-    setState(() {
-      akanCheckout.remove(pesanan);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Pesanan ${pesanan['name']} dibatalkan.'),
-      duration: const Duration(seconds: 2),
-    ));
+  Map<String, String> _headers() => {
+        'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      };
+
+  Future<void> fetchBookings() async {
+    setState(() => _loading = true);
+    final url = selectedTab == 'reviews'
+        ? '$baseUrl/host/reviews'
+        : '$baseUrl/host/bookings?status=$selectedTab';
+
+    try {
+      final res = await http.get(Uri.parse(url), headers: _headers());
+      if (res.statusCode == 200) {
+        final decoded = json.decode(res.body);
+        setState(() {
+          if (selectedTab == 'reviews') {
+            reviews = decoded['reviews'] ?? [];
+          } else {
+            bookings = decoded['bookings'] ?? [];
+          }
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+        debugPrint('DEBUG fetch $selectedTab statusCode: ${res.statusCode}, body: ${res.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data (${res.statusCode}).'),
+            backgroundColor: Colors.red[400],
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      debugPrint('ERROR fetchBookings: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Terjadi kesalahan jaringan.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _selesaikanPesanan(Map<String, String> pesanan) {
-    setState(() {
-      tamuSaatIni.remove(pesanan);
-      pesananSelesai.add(pesanan);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Pesanan ${pesanan['name']} telah selesai.'),
-      duration: const Duration(seconds: 2),
-    ));
+  Future<void> handleAction(String id, String action) async {
+    final url = '$baseUrl/bookings/$id/$action';
+    try {
+      final res = await http.patch(Uri.parse(url), headers: _headers());
+      if (res.statusCode == 200) {
+        await fetchBookings();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Berhasil $action'),
+            backgroundColor: Colors.green[400],
+          ),
+        );
+      } else {
+        debugPrint('DEBUG patch $action statusCode: ${res.statusCode}, body: ${res.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal $action (${res.statusCode}).'),
+            backgroundColor: Colors.red[400],
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('ERROR handleAction: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Terjadi kesalahan jaringan.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+
+  Widget _tabButton(String label, String value) {
+    final isSelected = selectedTab == value;
+    return GestureDetector(
+      onTap: () async {
+        if (selectedTab != value) {
+          setState(() => selectedTab = value);
+          await fetchBookings();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFFF5A5F) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFF5A5F) : Colors.grey[300]!,
+            width: 1,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: const Color(0xFFFF5A5F).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ] : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String formatDate(String date) {
+    try {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(DateTime.parse(date));
+    } catch (e) {
+      return date;
+    }
+  }
+
+  String formatCurrency(dynamic value) {
+  if (value == null) return 'Rp0';
+  try {
+    final number = double.tryParse(value.toString()) ?? 0;
+    return NumberFormat.currency(locale: 'id', symbol: 'Rp', decimalDigits: 0).format(number);
+  } catch (_) {
+    return 'Rp0';
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // Menghilangkan tombol back
-        title: const Text('Hari Ini'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'Selamat datang,\nTitis!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                Icon(Icons.notifications_none),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Selesaikan Iklan Anda'),
-            ),
-            const SizedBox(height: 24),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+            // Header Section
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              color: Colors.white,
+              child: Column(
                 children: [
-                  _tabChip('Belum di proses (${akanCheckout.length})'),
-                  const SizedBox(width: 8),
-                  _tabChip('Terkonfirmasi (${tamuSaatIni.length})'),
-                  const SizedBox(width: 8),
-                  _tabChip('Selesai (${pesananSelesai.length})'),
-                  const SizedBox(width: 8),
-                  _tabChip('Ulasan tamu (0)'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Selamat datang, Tuan Rumah!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.notifications_none,
+                          color: Colors.grey[700],
+                          size: 24,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Tab Buttons
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _tabButton('Belum diproses', 'pending'),
+                        const SizedBox(width: 12),
+                        _tabButton('Terkonfirmasi', 'confirmed'),
+                        const SizedBox(width: 12),
+                        _tabButton('Selesai', 'completed'),
+                        const SizedBox(width: 12),
+                        _tabButton('Ulasan tamu', 'reviews'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            if (selectedTab == 'Belum di proses (${akanCheckout.length})') ...[
-              const Text(
-                'Pesanan Akan Check-Out',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              for (var p in akanCheckout)
-                _orderCard(p['name']!, p['detail']!, p),
-            ] else if (selectedTab == 'Terkonfirmasi (${tamuSaatIni.length})') ...[
-              const Text(
-                'Terkonfirmasi',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              for (var t in tamuSaatIni)
-                _orderCard(t['name']!, t['detail']!, t),
-            ] else if (selectedTab == 'Selesai (${pesananSelesai.length})') ...[
-              const Text(
-                'Pesanan Selesai',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              for (var s in pesananSelesai)
-                _orderCard(s['name']!, s['detail']!, null),
-            ] else ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey.shade200,
-                ),
-                child: Column(
-                  children: const [
-                    Icon(Icons.insert_comment_outlined,
-                        size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tidak ada ulasan tamu untuk Anda tulis.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  'Semua reservasi (0)',
-                  style: TextStyle(decoration: TextDecoration.underline),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text('Kami siap membantu',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              _helpCard(
-                Icons.group,
-                'Bergabung dengan Klub Tuan Rumah lokal',
-                'Jalin koneksi, berkolaborasi, dan berbagi info dengan tuan rumah lain.',
-              ),
-              _helpCard(
-                Icons.support_agent,
-                'Hubungi layanan dukungan khusus',
-                'Sebagai tuan rumah baru, Anda mendapatkan akses ke tim dukungan khusus.',
-              ),
-              const SizedBox(height: 24),
-              const Text('Sumber informasi dan tips',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              _infoCard('Kini Anda bisa melakukan lebih banyak hal di Airbnb'),
-              _infoCard(
-                  'Jelajahi fitur untuk tuan rumah terbaru untuk membantu...'),
-            ]
+            
+            // Content Section
+            Expanded(
+              child: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF5A5F)),
+                      ),
+                    )
+                  : selectedTab == 'reviews'
+                      ? _buildReviewsList()
+                      : _buildBookingsList(),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabChip(String label) {
-    final bool isSelected = selectedTab == label;
-    return GestureDetector(
-      onTap: () => _selectTab(label),
-      child: Chip(
-        label: Text(label),
-        shape: const StadiumBorder(side: BorderSide(color: Colors.grey)),
-        backgroundColor: isSelected ? Colors.pink.shade100 : Colors.white,
-      ),
-    );
-  }
+  Widget _buildReviewsList() {
+    if (reviews.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.rate_review_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Belum ada ulasan',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Ulasan dari tamu akan muncul di sini',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
-  Widget _orderCard(String name, String detail, Map<String, String>? data) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(detail),
-          const SizedBox(height: 8),
-          if (data != null && akanCheckout.contains(data)) ...[
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => _konfirmasiPesanan(data),
-                  child: const Text('Konfirmasi'),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () => _batalkanPesanan(data),
-                  child: const Text('Batalkan'),
+      itemCount: reviews.length,
+      itemBuilder: (context, index) {
+        final review = reviews[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFFF5A5F),
+                    child: Text(
+                      (review['guest_name'] ?? 'T')[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          review['user_name'] ?? 'Tamu',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Row(
+                          children: List.generate(5, (i) {
+                            final rating = int.tryParse(review['rating']?.toString() ?? '0') ?? 0;
+                            return Icon(
+                              i < rating ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 16,
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (review['comment'] != null && review['comment'].toString().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  review['comment'],
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
                 ),
               ],
-            )
-          ] else if (data != null && tamuSaatIni.contains(data)) ...[
-            ElevatedButton(
-              onPressed: () => _selesaikanPesanan(data),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text('Selesaikan Pesanan'),
-            )
-          ]
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _helpCard(IconData icon, String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+  Widget _buildBookingsList() {
+    if (bookings.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_note_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Tidak ada pemesanan',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Pemesanan dengan status ${_getStatusText(selectedTab)} akan muncul di sini',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 32, color: Colors.black),
-          const SizedBox(width: 12),
-          Expanded(
+      itemCount: bookings.length,
+      itemBuilder: (context, index) {
+        final booking = bookings[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: Colors.grey.shade600)),
+                // Guest info
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: const Color(0xFFFF5A5F),
+                      child: Text(
+                        (booking['guest_name'] ?? 'T')[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booking['guest_name'] ?? 'Tamu',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            booking['property_title'] ?? '',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Booking details
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailRow(
+                        Icons.login,
+                        'Check-in',
+                        formatDate(booking['start_date'] ?? ''),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        Icons.logout,
+                        'Check-out',
+                        formatDate(booking['end_date'] ?? ''),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        Icons.payments,
+                        'Total Harga',
+                        formatCurrency(booking['total_price']),
+                      ),
+                      if (booking['payment_code'] != null) ...[
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          Icons.receipt,
+                          'Kode Pembayaran',
+                          booking['payment_code'],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Action buttons
+                if (selectedTab == 'pending') ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => handleAction(
+                            booking['id_booking'].toString(),
+                            'accept',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF5A5F),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Terima',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => handleAction(
+                            booking['id_booking'].toString(),
+                            'reject',
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFFF5A5F),
+                            side: const BorderSide(color: Color(0xFFFF5A5F)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Tolak',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else if (selectedTab == 'confirmed') ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => handleAction(
+                        booking['id_booking'].toString(),
+                        'complete',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Selesaikan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
-          )
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _infoCard(String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-      ),
-      child: Text(title),
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 12),
+        Text(
+          '$label:',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
     );
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'pending':
+        return 'belum diproses';
+      case 'confirmed':
+        return 'terkonfirmasi';
+      case 'completed':
+        return 'selesai';
+      case 'reviews':
+        return 'ulasan';
+      default:
+        return status;
+    }
   }
 }

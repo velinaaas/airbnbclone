@@ -86,7 +86,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Edit Profil"),
-        backgroundColor: const Color(0xFFFF2D87),
+        backgroundColor: const Color(0xFFFF5A5F),
         foregroundColor: Colors.white,
       ),
       body: _loading
@@ -136,7 +136,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF2D87),
+                        backgroundColor: const Color(0xFFFF5A5F),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -152,4 +152,3 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 }
- 
