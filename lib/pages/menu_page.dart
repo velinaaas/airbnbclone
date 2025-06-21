@@ -69,7 +69,7 @@ class _MenuPageState extends State<MenuPage> {
           ),
           const SizedBox(height: 16),
 
-          // Kartu Profil Pengguna (tidak bisa diklik)
+          // Kartu Profil Pengguna
           Container(
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
@@ -153,14 +153,13 @@ class _MenuPageState extends State<MenuPage> {
           ElevatedButton(
             onPressed: () async {
               bool success = await AuthService.switchToGuestRole(context);
-            if (success) {
-              Navigator.pushReplacement(
-              context,
-                MaterialPageRoute(builder: (_) => ExplorePage()),
-              );
-            }
-          },
-
+              if (success) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => ExplorePage()),
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
@@ -169,26 +168,30 @@ class _MenuPageState extends State<MenuPage> {
             ),
             child: const Text("Pindah ke mode tamu"),
           ),
+
+          const SizedBox(height: 16), // Tambahan jarak antar tombol
+
           // Tombol Logout
-            ElevatedButton.icon(
-              onPressed: () async {
+          ElevatedButton.icon(
+            onPressed: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
               Navigator.pushAndRemoveUntil(
-              context,
+                context,
                 MaterialPageRoute(builder: (_) => const LoginPage()),
                 (route) => false,
               );
             },
             icon: const Icon(Icons.logout),
-            label: const Text("Keluar / Logout"),
+            label: const Text("Logout"),
             style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(vertical: 14),
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
           ),
-        ),
+
           const SizedBox(height: 40),
         ],
       ),
@@ -196,7 +199,6 @@ class _MenuPageState extends State<MenuPage> {
   }
 }
 
-// Kartu Fitur Tambahan
 class _FeatureCard extends StatelessWidget {
   final String title;
   final String iconAsset;
