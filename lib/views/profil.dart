@@ -169,7 +169,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   child: const Text("Pindah ke mode tuan rumah"),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 16), // Tambahan jarak antar tombol
 
                 // Tombol Logout
                 ElevatedButton.icon(
@@ -180,7 +180,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   icon: const Icon(Icons.logout),
                   label: const Text("Logout"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -210,7 +210,6 @@ class _ProfilPageState extends State<ProfilPage> {
               Navigator.pushReplacementNamed(context, '/pesan');
               break;
             case 4:
-              // Sudah di ProfilPage
               break;
           }
         },
