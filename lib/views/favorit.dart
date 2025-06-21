@@ -57,7 +57,7 @@ class FavoritPage extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
-        selectedItemColor: Colors.pink,
+        selectedItemColor:const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {

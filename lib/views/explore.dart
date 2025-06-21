@@ -261,7 +261,7 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
-        selectedItemColor: Colors.pink,
+        selectedItemColor:const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (idx) {

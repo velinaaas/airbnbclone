@@ -114,7 +114,7 @@ class _PerjalananPageState extends State<PerjalananPage> {
                                 icon: Icon(Icons.rate_review),
                                 label: Text("Tulis Ulasan"),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.pink,
+                                  backgroundColor: const Color(0xFFFF5A5F),
                                   foregroundColor: Colors.white,
                                 ),
                               ),
@@ -131,7 +131,7 @@ class _PerjalananPageState extends State<PerjalananPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        selectedItemColor: Colors.pink,
+        selectedItemColor: const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {

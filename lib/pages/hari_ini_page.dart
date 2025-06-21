@@ -246,7 +246,7 @@ class _HariIniContentState extends State<_HariIniContent> {
                       const Text(
                         'Selamat datang, Tuan Rumah!',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),

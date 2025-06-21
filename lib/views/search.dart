@@ -187,7 +187,7 @@ class _SearchPageState extends State<SearchPage>
           Expanded(
             child: TabBar(
               controller: _tab,
-              indicatorColor: Colors.pink,
+              indicatorColor:const Color(0xFFFF5A5F),
               labelColor: Colors.black,
               unselectedLabelColor: Colors.grey,
               tabs: const [
@@ -515,7 +515,7 @@ class _SearchPageState extends State<SearchPage>
       );
 
   ButtonStyle get _pinkButtonStyle => ElevatedButton.styleFrom(
-        backgroundColor: Colors.pink,
+        backgroundColor:const Color(0xFFFF5A5F),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

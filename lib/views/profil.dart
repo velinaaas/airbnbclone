@@ -192,7 +192,7 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 4,
-        selectedItemColor: Colors.pink,
+        selectedItemColor: const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
