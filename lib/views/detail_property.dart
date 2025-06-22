@@ -74,6 +74,8 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
       setState(() {
         isLoading = false;
         errorMessage = 'Terjadi kesalahan: $e';
+          print('❌ ERROR fetchPropertyDetail: $e');
+          
       });
     }
   }
@@ -525,7 +527,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                               ),
                               child: IconButton(
                                 onPressed: () => _openWhatsApp(
-                                  data['phone_number'] ?? '+6281933773092',
+                                  data['host_phone_number'] ?? '',
                                   data['host_name'] ?? 'Host',
                                   data['title'] ?? 'Properti'
                                 ),
