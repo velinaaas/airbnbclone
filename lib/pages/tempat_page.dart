@@ -43,11 +43,21 @@ class _TempatPageState extends State<TempatPage> {
         properties.removeWhere((item) => item.idProperty == id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Iklan berhasil dihapus')),
+        SnackBar(
+          content: Text('Iklan berhasil dihapus'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus iklan')),
+        SnackBar(
+          content: Text('Gagal menghapus iklan'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     }
   }
@@ -56,46 +66,95 @@ class _TempatPageState extends State<TempatPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Stack(
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 20),
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: property.coverPhoto != null
-                        ? ClipRRect(
+        return Container(
+          margin: EdgeInsets.only(top: 60),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                SizedBox(height: 24),
+                
+                // Property image
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: property.coverPhoto != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            property.coverPhoto!,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              property.coverPhoto!,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Icon(Icons.image, size: 40),
+                          ),
+                          child: Icon(Icons.home, size: 48, color: Colors.grey[400]),
+                        ),
+                ),
+                SizedBox(height: 20),
+                
+                // Property title
+                Text(
+                  property.title,
+                  style: TextStyle(
+                    fontSize: 22, 
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    property.title,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                
+                // Property details
+                Text(
+                  property.address,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
                   ),
-                  SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 32),
+                
+                // Edit button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () async {
                       Navigator.pop(context);
-                      Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CreatePropertyPage(
@@ -117,43 +176,42 @@ class _TempatPageState extends State<TempatPage> {
                           ),
                         ),
                       );
+                      fetchHostProperties();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      minimumSize: Size(double.infinity, 50),
+                      backgroundColor: Color(0xFFFF5A5F), // Airbnb pink
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      elevation: 0,
                     ),
                     child: Text(
                       'Edit iklan',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () => deleteProperty(property.idProperty),
-                    child: Text(
-                      'Menghapus iklan',
                       style: TextStyle(
-                        color: Colors.red,
                         fontSize: 16,
-                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
-                ],
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Icon(Icons.close, size: 28),
                 ),
-              ),
-            ],
+                SizedBox(height: 16),
+                
+                // Delete button
+                TextButton(
+                  onPressed: () => deleteProperty(property.idProperty),
+                  child: Text(
+                    'Hapus iklan',
+                    style: TextStyle(
+                      color: Colors.red[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+              ],
+            ),
           ),
         );
       },
@@ -163,101 +221,226 @@ class _TempatPageState extends State<TempatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
+        title: Text(
+          'Tempat Saya',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: Colors.black, size: 32),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreatePropertyPage(isEdit: false),
+          Container(
+            margin: EdgeInsets.only(right: 16),
+            child: IconButton(
+              icon: Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Color(0xFFFF5A5F),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-            },
+                child: Icon(Icons.add, color: Colors.white, size: 20),
+              ),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreatePropertyPage(isEdit: false),
+                  ),
+                );
+                fetchHostProperties();
+              },
+            ),
           ),
         ],
       ),
-      backgroundColor: Colors.white,
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF5A5F)),
+              ),
+            )
           : properties.isEmpty
-              ? Center(child: Text('Belum ada iklan'))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.home_outlined,
+                        size: 80,
+                        color: Colors.grey[300],
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Belum ada iklan',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Tambahkan tempat pertama Anda',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   itemCount: properties.length,
                   itemBuilder: (context, index) {
                     final property = properties[index];
                     return GestureDetector(
                       onTap: () => _showPropertyDetail(context, property),
-                      child: Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: Row(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Cover image di kiri
-                            if (property.coverPhoto != null)
-                              ClipRRect(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  bottomLeft: Radius.circular(12),
-                                ),
-                                child: Image.network(
-                                  property.coverPhoto!,
-                                  width: 120,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            else
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(12),
-                                    bottomLeft: Radius.circular(12),
-                                  ),
-                                ),
-                                child: Icon(Icons.photo, size: 40, color: Colors.grey[600]),
-                              ),
-
-                            // Informasi di kanan
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(property.title,
-                                        style: TextStyle(
-                                            fontSize: 18, fontWeight: FontWeight.bold)),
-                                    SizedBox(height: 4),
-                                    Text(property.address,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis),
-                                    SizedBox(height: 6),
-                                    Text('Rp ${property.pricePerNight.toInt()}/malam'),
-                                    SizedBox(height: 4),
-                                    Text(
-                                        '${property.bedrooms} kamar • ${property.bathrooms} mandi • ${property.maxGuests} tamu'),
-                                    if (property.categoryName != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text('Kategori: ${property.categoryName}'),
+                            // Property image
+                            Container(
+                              height: 200,
+                              width: double.infinity,
+                              child: property.coverPhoto != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(16),
                                       ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Dibuat: ${property.createdAt.split("T").first}',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      child: Image.network(
+                                        property.coverPhoto!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.photo_camera_outlined,
+                                          size: 48,
+                                          color: Colors.grey[400],
+                                        ),
+                                      ),
                                     ),
-                                  ],
-                                ),
+                            ),
+                            
+                            // Property details
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Title and category
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          property.title,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black87,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (property.categoryName != null)
+                                        Container(
+                                          margin: EdgeInsets.only(left: 8),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFFF5A5F).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            property.categoryName!,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFFFF5A5F),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6),
+                                  
+                                  // Address
+                                  Text(
+                                    property.address,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey[600],
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 12),
+                                  
+                                  // Property specs
+                                  Row(
+                                    children: [
+                                      _buildSpecItem(Icons.bed_outlined, '${property.bedrooms}'),
+                                      SizedBox(width: 16),
+                                      _buildSpecItem(Icons.bathroom_outlined, '${property.bathrooms}'),
+                                      SizedBox(width: 16),
+                                      _buildSpecItem(Icons.people_outline, '${property.maxGuests}'),
+                                    ],
+                                  ),
+                                  SizedBox(height: 12),
+                                  
+                                  // Price and date
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Rp ${_formatPrice(property.pricePerNight.toInt())}/malam',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Dibuat ${_formatDate(property.createdAt)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -267,5 +450,45 @@ class _TempatPageState extends State<TempatPage> {
                   },
                 ),
     );
+  }
+
+  Widget _buildSpecItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: Colors.grey[600],
+        ),
+        SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+      ];
+      return '${date.day} ${months[date.month - 1]} ${date.year}';
+    } catch (e) {
+      return dateStr.split("T").first;
+    }
   }
 }
