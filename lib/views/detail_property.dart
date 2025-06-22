@@ -442,7 +442,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                               ),
                               child: IconButton(
                                 onPressed: () => _openWhatsApp(
-                                  data['phone_number'] ?? '',
+                                  data['phone_number'] ?? '+6281933773092',
                                   data['host_name'] ?? 'Host',
                                   data['title'] ?? 'Properti'
                                 ),
