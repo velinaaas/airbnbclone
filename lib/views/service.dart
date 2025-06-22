@@ -290,7 +290,7 @@ class ServicePage extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/perjalanan');
             break;
           case 3:
-            Navigator.pushReplacementNamed(context, '/pesan');
+            // Navigator.pushReplacementNamed(context, '/pesan');
             break;
           case 4:
             Navigator.pushReplacementNamed(context, '/profil');
@@ -300,8 +300,8 @@ class ServicePage extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
         BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
-        BottomNavigationBarItem(icon: Icon(Icons.room_service), label: "Layanan"),
-        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
+        BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
+        // BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
         BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
       ],
     );
