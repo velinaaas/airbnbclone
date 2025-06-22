@@ -16,6 +16,7 @@ class Property {
   final String createdAt;
   final String updatedAt;
   final Category? category;
+  final String? categoryName;
   
   // Tambahan dari join
   final String? coverPhoto;
@@ -39,6 +40,7 @@ class Property {
     this.category,
     this.coverPhoto,
     this.averageRating,
+    this.categoryName,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -62,6 +64,7 @@ class Property {
           : null,
       coverPhoto: json['cover_photo'],
       averageRating: double.tryParse(json['average_rating']?.toString() ?? '0.0'),
+      categoryName: json['category_name'],
     );
   }
 }

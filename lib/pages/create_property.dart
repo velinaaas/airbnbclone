@@ -3,12 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 class CreatePropertyPage extends StatefulWidget {
   final bool isEdit;
   final Map<String, dynamic>? initialData;
+  final dynamic existingProperty;
 
-  CreatePropertyPage({this.isEdit = false, this.initialData});
+  const CreatePropertyPage({
+    super.key,
+    this.existingProperty,
+    this.initialData,
+    this.isEdit = false,
+  });
 
   @override
   _CreatePropertyPageState createState() => _CreatePropertyPageState();
@@ -19,7 +28,6 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
   final picker = ImagePicker();
   List<File> _photos = [];
 
-  // Form fields
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   final priceController = TextEditingController();
@@ -30,6 +38,14 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
   final bathroomsController = TextEditingController();
   final maxGuestsController = TextEditingController();
   final categoryIdController = TextEditingController();
+
+  final List<Map<String, dynamic>> categories = [
+    {'id': 1, 'label': 'Villa', 'icon': Icons.house},
+    {'id': 2, 'label': 'Apartemen', 'icon': Icons.apartment},
+    {'id': 3, 'label': 'Rumah', 'icon': Icons.home},
+    {'id': 4, 'label': 'Kontrakan', 'icon': Icons.domain},
+    {'id': 5, 'label': 'Cottage', 'icon': Icons.cabin},
+  ];
 
   @override
   void initState() {
@@ -49,54 +65,29 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
   }
 
   Future<void> pickImages() async {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Ambil dari Kamera'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() {
-                      _photos.add(File(pickedFile.path));
-                    });
-                  }
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Pilih dari Galeri'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFiles = await picker.pickMultiImage();
-                  if (pickedFiles.isNotEmpty) {
-                    setState(() {
-                      _photos.addAll(pickedFiles.map((e) => File(e.path)));
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
+    final pickedFiles = await picker.pickMultiImage();
+    if (pickedFiles.isNotEmpty) {
+      setState(() {
+        _photos.addAll(pickedFiles.map((e) => File(e.path)));
+      });
+    }
+  }
+
+  Future<void> getCurrentLocation() async {
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
     );
+    setState(() {
+      latitudeController.text = position.latitude.toString();
+      longitudeController.text = position.longitude.toString();
+    });
   }
 
   Future<void> submitProperty() async {
     final propertyId = widget.initialData?['id_property'];
     final uri = widget.isEdit
-        ? Uri.parse('https://yourapi.com/api/properties/$propertyId')
-        : Uri.parse('https://yourapi.com/api/properties');
+        ? Uri.parse('https://apiairbnb-production.up.railway.app/api/properties/update/$propertyId')
+        : Uri.parse('https://apiairbnb-production.up.railway.app/api/properties/add');
 
     var request = http.MultipartRequest(widget.isEdit ? 'PUT' : 'POST', uri);
 
@@ -120,10 +111,9 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
     }
 
     final response = await request.send();
-
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.isEdit ? 'Property berhasil disimpan' : 'Property berhasil dibuat')),
+        SnackBar(content: Text(widget.isEdit ? 'Property berhasil diupdate' : 'Property berhasil dibuat')),
       );
       Navigator.pop(context);
     } else {
@@ -133,8 +123,33 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
     }
   }
 
+  Widget buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return '$label tidak boleh kosong';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    LatLng initialPosition = LatLng(
+      double.tryParse(latitudeController.text) ?? -7.797068,
+      double.tryParse(longitudeController.text) ?? 110.370529,
+    );
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.isEdit ? 'Edit Property' : 'Create Property')),
       body: Padding(
@@ -147,13 +162,71 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
               buildTextField(descriptionController, 'Description'),
               buildTextField(priceController, 'Price per Night', isNumber: true),
               buildTextField(addressController, 'Address'),
+              Text('Pilih Lokasi:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(
+                height: 250,
+                child: FlutterMap(
+                  options: MapOptions(
+                    center: initialPosition,
+                    zoom: 13.0,
+                    onTap: (tapPosition, point) {
+                      setState(() {
+                        latitudeController.text = point.latitude.toString();
+                        longitudeController.text = point.longitude.toString();
+                      });
+                    },
+                  ),
+                  children: [ // ✅ Gunakan children, bukan builder
+                    TileLayer(
+                      urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      subdomains: ['a', 'b', 'c'],
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: LatLng(
+                          double.tryParse(latitudeController.text) ?? -7.797,
+                          double.tryParse(longitudeController.text) ?? 110.370,
+                        ),
+                        width: 40,
+                        height: 40,
+                        child: Icon(Icons.location_pin, color: Colors.red, size: 40),
+                      ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                icon: Icon(Icons.my_location),
+                label: Text('Gunakan Lokasi Saya'),
+                onPressed: getCurrentLocation,
+              ),
               buildTextField(latitudeController, 'Latitude', isNumber: true),
               buildTextField(longitudeController, 'Longitude', isNumber: true),
               buildTextField(bedroomsController, 'Bedrooms', isNumber: true),
               buildTextField(bathroomsController, 'Bathrooms', isNumber: true),
               buildTextField(maxGuestsController, 'Max Guests', isNumber: true),
-              buildTextField(categoryIdController, 'Category ID', isNumber: true),
-              SizedBox(height: 10),
+              SizedBox(height: 16),
+              Text('Kategori', style: TextStyle(fontWeight: FontWeight.bold)),
+              Wrap(
+                spacing: 10,
+                children: List.generate(categories.length, (index) {
+                  final cat = categories[index];
+                  final selected = categoryIdController.text == cat['id'].toString();
+                  return ChoiceChip(
+                    label: Text(cat['label']),
+                    avatar: Icon(cat['icon'], size: 20),
+                    selected: selected,
+                    onSelected: (_) {
+                      setState(() {
+                        categoryIdController.text = cat['id'].toString();
+                      });
+                    },
+                  );
+                }),
+              ),
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: pickImages,
                 child: Text('Pilih Foto (${_photos.length})'),
@@ -212,26 +285,6 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label tidak boleh kosong';
-          }
-          return null;
-        },
       ),
     );
   }

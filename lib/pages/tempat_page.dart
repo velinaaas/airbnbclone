@@ -1,94 +1,65 @@
+import 'package:airbnbclone/services/propertyService.dart';
 import 'package:flutter/material.dart';
-import 'create_property.dart';
+import 'package:airbnbclone/models/property.dart';
+import 'package:airbnbclone/pages/create_property.dart';
 
-class TempatPage extends StatelessWidget {
+class TempatPage extends StatefulWidget {
+  const TempatPage({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: Colors.black, size: 32),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreatePropertyPage()),
-              );
-            },
-          ),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Iklan Anda',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            GestureDetector(
-              onTap: () => _showPropertyDetail(context),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: EdgeInsets.all(16),
-                width: double.infinity,
-                height: 200,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.circle, size: 10, color: Colors.orange),
-                        SizedBox(width: 6),
-                        Text('Sedang diproses'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _showPropertyDetail(context),
-              child: Text(
-                'Iklan Rumah Anda dibuat pada 5 Mei 2025',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Home',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
+  State<TempatPage> createState() => _TempatPageState();
+}
+
+class _TempatPageState extends State<TempatPage> {
+  final PropertyService propertyService = PropertyService();
+  List<Property> properties = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchHostProperties();
   }
 
-  void _showPropertyDetail(BuildContext context) {
+  Future<void> fetchHostProperties() async {
+    try {
+      final data = await propertyService.getHostProperties();
+      setState(() {
+        properties = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      print('Error: $e');
+    }
+  }
+
+  Future<void> deleteProperty(int id) async {
+    final success = await propertyService.deleteProperty(id);
+    Navigator.pop(context);
+
+    if (success) {
+      setState(() {
+        properties.removeWhere((item) => item.idProperty == id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Iklan berhasil dihapus')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus iklan')),
+      );
+    }
+  }
+
+  void _showPropertyDetail(BuildContext context, Property property) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (BuildContext context) {
+      builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(20.0),
           child: Stack(
@@ -104,11 +75,20 @@ class TempatPage extends StatelessWidget {
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(16),
                     ),
+                    child: property.coverPhoto != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.network(
+                              property.coverPhoto!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Icon(Icons.image, size: 40),
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Iklan Rumah Anda dibuat pada 5 Mei 2025',
-                    style: TextStyle(fontSize: 16),
+                    property.title,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 24),
@@ -118,7 +98,23 @@ class TempatPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CreatePropertyPage(),
+                          builder: (context) => CreatePropertyPage(
+                            isEdit: true,
+                            existingProperty: property,
+                            initialData: {
+                              'id_property': property.idProperty,
+                              'title': property.title,
+                              'description': property.description,
+                              'price_per_night': property.pricePerNight,
+                              'address': property.address,
+                              'latitude': property.latitude,
+                              'longitude': property.longitude,
+                              'bedrooms': property.bedrooms,
+                              'bathrooms': property.bathrooms,
+                              'max_guests': property.maxGuests,
+                              'category_id': property.category?.id ?? '',
+                            },
+                          ),
                         ),
                       );
                     },
@@ -136,10 +132,7 @@ class TempatPage extends StatelessWidget {
                   ),
                   SizedBox(height: 16),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Tambahkan logika hapus di sini
-                    },
+                    onTap: () => deleteProperty(property.idProperty),
                     child: Text(
                       'Menghapus iklan',
                       style: TextStyle(
@@ -164,6 +157,115 @@ class TempatPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add, color: Colors.black, size: 32),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreatePropertyPage(isEdit: false),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      backgroundColor: Colors.white,
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : properties.isEmpty
+              ? Center(child: Text('Belum ada iklan'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: properties.length,
+                  itemBuilder: (context, index) {
+                    final property = properties[index];
+                    return GestureDetector(
+                      onTap: () => _showPropertyDetail(context, property),
+                      child: Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Row(
+                          children: [
+                            // Cover image di kiri
+                            if (property.coverPhoto != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(12),
+                                  bottomLeft: Radius.circular(12),
+                                ),
+                                child: Image.network(
+                                  property.coverPhoto!,
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    bottomLeft: Radius.circular(12),
+                                  ),
+                                ),
+                                child: Icon(Icons.photo, size: 40, color: Colors.grey[600]),
+                              ),
+
+                            // Informasi di kanan
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(property.title,
+                                        style: TextStyle(
+                                            fontSize: 18, fontWeight: FontWeight.bold)),
+                                    SizedBox(height: 4),
+                                    Text(property.address,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis),
+                                    SizedBox(height: 6),
+                                    Text('Rp ${property.pricePerNight.toInt()}/malam'),
+                                    SizedBox(height: 4),
+                                    Text(
+                                        '${property.bedrooms} kamar • ${property.bathrooms} mandi • ${property.maxGuests} tamu'),
+                                    if (property.categoryName != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text('Kategori: ${property.categoryName}'),
+                                      ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Dibuat: ${property.createdAt.split("T").first}',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
