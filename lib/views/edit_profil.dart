@@ -41,7 +41,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       setState(() {
         _namaController.text = data['name'] ?? '';
         _emailController.text = data['email'] ?? '';
-        _teleponController.text = data['phone'] ?? '';
+        _teleponController.text = data['phone_number'] ?? '';
         _loading = false;
       });
     } else {
@@ -65,7 +65,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       body: jsonEncode({
         "name": _namaController.text,
         "email": _emailController.text,
-        "phone": _teleponController.text,
+        "phone_number": _teleponController.text,
       }),
     );
 

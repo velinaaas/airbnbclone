@@ -30,7 +30,7 @@ class _RegisterPageState extends State<RegisterPage> {
       final success = await AuthService.register(
         name: nameController.text,
         email: emailController.text,
-        phone: phoneController.text,
+        phone_number: phoneController.text,
         password: passwordController.text,
         context: context,
       );

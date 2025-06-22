@@ -13,7 +13,7 @@ class AuthService {
   static Future<bool> register({
     required String name,
     required String email,
-    required String phone,
+    required String phone_number,
     required String password,
     required BuildContext context,
   }) async {
@@ -26,7 +26,7 @@ class AuthService {
         body: jsonEncode({
           "name": name,
           "email": email,
-          "phone": phone,
+          "phone_number": phone_number,
           "password": password,
         }),
       );
@@ -79,7 +79,7 @@ class AuthService {
           "id": 0,
           "name": email.split('@')[0],
           "email": email,
-          "phone": "",
+          "phone_number": "",
           "roles": roles
         };
 
@@ -171,7 +171,7 @@ class AuthService {
           id: user.id,
           name: user.name,
           email: user.email,
-          phone: user.phone,
+          phone_number: user.phone_number,
           roles: updatedRoles,
         );
 
@@ -255,7 +255,7 @@ Future<bool> switchToGuestRole(BuildContext context) async {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone_number: user.phone_number,
         roles: updatedRoles,
       );
 
