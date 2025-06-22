@@ -67,7 +67,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tulis Ulasan'),
-        backgroundColor: Colors.pink,
+        backgroundColor: const Color(0xFFFF5A5F),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -110,7 +110,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : () => _submitReview(propertyId),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink,
+                  backgroundColor:const Color(0xFFFF5A5F),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: _isSubmitting

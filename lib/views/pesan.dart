@@ -113,7 +113,7 @@ class _PesanPageState extends State<PesanPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
-        selectedItemColor: Colors.pink,
+        selectedItemColor:const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,

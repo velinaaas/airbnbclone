@@ -98,7 +98,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.pink,
+        selectedItemColor:const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: _onBottomNavTapped,

@@ -29,8 +29,8 @@ class _BookingPageState extends State<BookingPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            primaryColor: const Color(0xFFFF2D87),
-            colorScheme: const ColorScheme.light(primary: Color(0xFFFF2D87)),
+            primaryColor:const Color(0xFFFF5A5F),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFFF5A5F)),
           ),
           child: child!,
         );
@@ -167,7 +167,7 @@ class _BookingPageState extends State<BookingPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Booking Villa'),
-        backgroundColor: const Color(0xFFFF2D87),
+        backgroundColor:const Color(0xFFFF5A5F),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -186,7 +186,7 @@ class _BookingPageState extends State<BookingPage> {
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 241, 227, 233),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Color(0xFFFF2D87)),
+                  border: Border.all(color: const Color(0xFFFF5A5F)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -195,7 +195,7 @@ class _BookingPageState extends State<BookingPage> {
                       dateText,
                       style: const TextStyle(fontSize: 16),
                     ),
-                    const Icon(Icons.calendar_today, color: Color(0xFFFF2D87)),
+                    const Icon(Icons.calendar_today, color: const Color(0xFFFF5A5F)),
                   ],
                 ),
               ),
@@ -228,7 +228,7 @@ class _BookingPageState extends State<BookingPage> {
             ElevatedButton(
               onPressed: selectedDateRange == null ? null : _submitBooking,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF2D87),
+                backgroundColor:const Color(0xFFFF5A5F),
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: const Text(

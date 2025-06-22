@@ -185,7 +185,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                         fetchPropertyData();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pink,
+                        backgroundColor: const Color(0xFFFF5A5F),
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -528,7 +528,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.pink,
+                        color:const Color(0xFFFF5A5F),
                       ),
                     ),
                   ],
@@ -538,12 +538,12 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.pink, Colors.purple.shade400],
+                    colors: [const Color(0xFFFF5A5F), Colors.purple.shade400],
                   ),
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.pink.withOpacity(0.3),
+                      color:const Color(0xFFFF5A5F),
                       blurRadius: 15,
                       offset: Offset(0, 8),
                     ),
@@ -604,7 +604,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
               color: Colors.pink.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: Colors.pink, size: 20),
+            child: Icon(icon, color:const Color(0xFFFF5A5F), size: 20),
           ),
           SizedBox(height: 8),
           Text(
@@ -796,7 +796,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                                   ? loadingProgress.cumulativeBytesLoaded /
                                       loadingProgress.expectedTotalBytes!
                                   : null,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink),
+                              valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFFF5A5F),)
                             ),
                           ),
                         );
