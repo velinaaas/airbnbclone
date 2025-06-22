@@ -150,17 +150,33 @@ class _PerjalananPageState extends State<PerjalananPage> {
   }
 
   Widget _buildStatusRow(String status, dynamic payment) {
-    final isPaid = payment != null;
-    return Row(
-      children: [
-        Icon(isPaid ? Icons.check_circle : Icons.hourglass_bottom,
-            color: isPaid ? Colors.green : Colors.orange),
-        const SizedBox(width: 6),
-        Text(
-          isPaid ? 'Dibayar' : 'Status: ${status[0].toUpperCase()}${status.substring(1)}',
-          style: TextStyle(color: isPaid ? Colors.green : Colors.orange),
-        ),
-      ],
-    );
+  final isPaid = payment != null;
+
+  Color color;
+  IconData icon;
+  String text;
+
+  if (status == 'rejected') {
+    color = Colors.red;
+    icon = Icons.cancel;
+    text = 'Ditolak';
+  } else if (isPaid) {
+    color = Colors.green;
+    icon = Icons.check_circle;
+    text = 'Dibayar';
+  } else {
+    color = Colors.orange;
+    icon = Icons.hourglass_bottom;
+    text = 'Status: ${status[0].toUpperCase()}${status.substring(1)}';
   }
+
+  return Row(
+    children: [
+      Icon(icon, color: color),
+      const SizedBox(width: 6),
+      Text(text, style: TextStyle(color: color)),
+    ],
+  );
+}
+
 }

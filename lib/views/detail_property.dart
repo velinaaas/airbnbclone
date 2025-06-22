@@ -18,8 +18,11 @@ class DetailPropertyPage extends StatefulWidget {
 
 class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProviderStateMixin {
   Map<String, dynamic>? propertyData;
+  List<Map<String, dynamic>> reviews = [];
   bool isLoading = true;
+  bool isLoadingReviews = true;
   String? errorMessage;
+  String? reviewErrorMessage;
   PageController _pageController = PageController();
   int _currentPhotoIndex = 0;
   bool isFavorite = false;
@@ -37,6 +40,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     fetchPropertyData();
+    fetchReviews();
   }
 
   @override
@@ -72,6 +76,85 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
         errorMessage = 'Terjadi kesalahan: $e';
       });
     }
+  }
+
+  Future<void> fetchReviews() async {
+  print('🔍 Fetching reviews for property ID: ${widget.propertyId}');
+  
+  final url = Uri.parse(
+    'https://apiairbnb-production.up.railway.app/api/guest/properties/${widget.propertyId}/reviews',
+  );
+
+  try {
+    print('📡 Making request to: $url');
+    final response = await http.get(url);
+    
+    print('📥 Response status code: ${response.statusCode}');
+    print('📥 Response body: ${response.body}');
+    
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      print('✅ Parsed response data: $responseData');
+      
+      // Coba beberapa struktur data yang mungkin
+      List<Map<String, dynamic>> reviewsList = [];
+      
+      if (responseData is Map<String, dynamic>) {
+        // Jika response berupa object dengan key 'data'
+        if (responseData.containsKey('data') && responseData['data'] is List) {
+          reviewsList = List<Map<String, dynamic>>.from(responseData['data']);
+          print('📋 Found reviews in data key: ${reviewsList.length} reviews');
+        }
+        // Jika response berupa object dengan key 'reviews'
+        else if (responseData.containsKey('reviews') && responseData['reviews'] is List) {
+          reviewsList = List<Map<String, dynamic>>.from(responseData['reviews']);
+          print('📋 Found reviews in reviews key: ${reviewsList.length} reviews');
+        }
+        // Jika response langsung berupa object yang berisi review fields
+        else if (responseData.containsKey('id_review') || responseData.containsKey('rating') || responseData.containsKey('comment')) {
+          reviewsList = [Map<String, dynamic>.from(responseData)];
+          print('📋 Found single review object: 1 review');
+        }
+      }
+      // Jika response langsung berupa array
+      else if (responseData is List) {
+        reviewsList = List<Map<String, dynamic>>.from(responseData);
+        print('📋 Found direct array: ${reviewsList.length} reviews');
+      }
+      
+      // Log setiap review untuk debugging
+      for (int i = 0; i < reviewsList.length; i++) {
+        print('📝 Review $i: ${reviewsList[i]}');
+      }
+      
+      setState(() {
+        reviews = reviewsList;
+        isLoadingReviews = false;
+        reviewErrorMessage = null;
+      });
+      
+      print('✅ Successfully loaded ${reviews.length} reviews');
+    } else {
+      print('❌ Error response: ${response.statusCode} - ${response.body}');
+      setState(() {
+        isLoadingReviews = false;
+        reviewErrorMessage = 'Gagal memuat review (${response.statusCode}): ${response.body}';
+      });
+    }
+  } catch (e, stackTrace) {
+    print('💥 Exception occurred: $e');
+    print('📚 Stack trace: $stackTrace');
+    setState(() {
+      isLoadingReviews = false;
+      reviewErrorMessage = 'Terjadi kesalahan saat memuat review: $e';
+    });
+  }
+}
+
+  double get averageRating {
+    if (reviews.isEmpty) return 0.0;
+    double total = reviews.fold(0.0, (sum, review) => sum + (review['rating']?.toDouble() ?? 0.0));
+    return total / reviews.length;
   }
 
   @override
@@ -334,7 +417,7 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                                 Icon(Icons.star, color: Colors.amber, size: 16),
                                 SizedBox(width: 4),
                                 Text(
-                                  '4.8',
+                                  averageRating > 0 ? averageRating.toStringAsFixed(1) : '4.8',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.amber[800],
@@ -483,6 +566,11 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
                         ),
                       ),
                       
+                      SizedBox(height: 24),
+                      
+                      // Reviews Section
+                      _buildReviewsSection(),
+                      
                       SizedBox(height: 100), // Space for bottom bar
                     ],
                   ),
@@ -588,29 +676,597 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
     );
   }
 
+  Widget _buildReviewsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Review & Rating',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            Spacer(),
+            if (!isLoadingReviews && reviews.isNotEmpty)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      '${averageRating.toStringAsFixed(1)} (${reviews.length})',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber[800],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        SizedBox(height: 16),
+        
+        if (isLoadingReviews)
+          Container(
+            padding: EdgeInsets.all(40),
+            child: Center(
+              child: Column(
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFFF5A5F)),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Memuat review...',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (reviewErrorMessage != null)
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red.shade400),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    reviewErrorMessage!,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      isLoadingReviews = true;
+                      reviewErrorMessage = null;
+                    });
+                    fetchReviews();
+                  },
+                  child: Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          )
+        else if (reviews.isEmpty)
+          Container(
+            padding: EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.rate_review_outlined, size: 48, color: Colors.grey.shade400),
+                  SizedBox(height: 12),
+                  Text(
+                    'Belum ada review',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Jadilah yang pertama memberikan review!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Column(
+            children: [
+              ...reviews.take(3).map((review) => _buildReviewCard(review)),
+              if (reviews.length > 3)
+                Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: TextButton(
+                    onPressed: () => _showAllReviews(),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF5A5F).withOpacity(0.1),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: Text(
+                      'Lihat semua ${reviews.length} review',
+                      style: TextStyle(
+                        color: const Color(0xFFFF5A5F),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildReviewCard(Map<String, dynamic> review) {
+  print('Building review card with data: $review');
+  
+  // Handle berbagai kemungkinan nama field
+  final rating = (review['rating'] ?? review['rating_value'] ?? 0).toDouble();
+  final comment = review['comment'] ?? review['review_text'] ?? review['description'] ?? '';
+  
+  // Handle nama guest dengan berbagai kemungkinan field
+  String guestName = 'Anonim';
+  if (review['guest_name'] != null && review['guest_name'].toString().isNotEmpty) {
+    guestName = review['guest_name'].toString();
+  } else if (review['user_name'] != null && review['user_name'].toString().isNotEmpty) {
+    guestName = review['user_name'].toString();
+  } else if (review['name'] != null && review['name'].toString().isNotEmpty) {
+    guestName = review['name'].toString();
+  }
+  
+  // Handle tanggal dengan berbagai kemungkinan field
+  String createdAt = review['created_at'] ?? review['date'] ?? review['review_date'] ?? '';
+  
+  DateTime? reviewDate;
+  try {
+    if (createdAt.isNotEmpty) {
+      reviewDate = DateTime.parse(createdAt);
+    }
+  } catch (e) {
+    print('⚠️ Failed to parse date: $createdAt - $e');
+    reviewDate = null;
+  }
+
+  return Container(
+    margin: EdgeInsets.only(bottom: 16),
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: Colors.grey.shade200),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 10,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey.shade200, width: 2),
+              ),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: const Color(0xFFFF5A5F).withOpacity(0.1),
+                child: Text(
+                  guestName.isNotEmpty ? guestName[0].toUpperCase() : 'A',
+                  style: TextStyle(
+                    color: const Color(0xFFFF5A5F),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    guestName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  if (reviewDate != null)
+                    Text(
+                      _formatDate(reviewDate),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    )
+                  else if (createdAt.isNotEmpty)
+                    Text(
+                      createdAt,
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star, color: Colors.amber, size: 14),
+                  SizedBox(width: 2),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber[800],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (comment.isNotEmpty) ...[
+          SizedBox(height: 12),
+          Text(
+            comment,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+        SizedBox(height: 8),
+        Row(
+          children: List.generate(5, (index) => Icon(
+            index < rating ? Icons.star : Icons.star_border,
+            color: Colors.amber,
+            size: 16,
+          )),
+        ),
+        // Debug info (hapus setelah berhasil)
+        if (true) // Set ke false setelah debugging selesai
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'DEBUG: ${review.toString()}',
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+// Juga tambahkan button untuk force refresh reviews di UI
+Widget _buildDebugRefreshButton() {
+  return Container(
+    margin: EdgeInsets.symmetric(vertical: 16),
+    child: ElevatedButton.icon(
+      onPressed: () {
+        print('🔄 Manual refresh reviews triggered');
+        setState(() {
+          isLoadingReviews = true;
+          reviewErrorMessage = null;
+          reviews.clear();
+        });
+        fetchReviews();
+      },
+      icon: Icon(Icons.refresh),
+      label: Text('Debug: Refresh Reviews'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+    ),
+  );
+}
+
+void _showAllReviews() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(25),
+              topRight: Radius.circular(25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: Offset(0, -10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Row(
+                  children: [
+                    Text(
+                      'Semua Review',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            '${averageRating.toStringAsFixed(1)} (${reviews.length})',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber[800],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(color: Colors.grey[200]),
+              // Reviews list
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: reviews.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: _buildReviewCard(reviews[index]),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoSlider(List<String> photos) {
+    if (photos.isEmpty) {
+      return Container(
+        color: Colors.grey[200],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.image, size: 64, color: Colors.grey[400]),
+              SizedBox(height: 8),
+              Text(
+                'Tidak ada foto tersedia',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentPhotoIndex = index;
+            });
+          },
+          itemCount: photos.length,
+          itemBuilder: (context, index) {
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(photos[index]),
+                  fit: BoxFit.cover,
+                  onError: (error, stackTrace) {
+                    // Handle image loading error
+                  },
+                ),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.5),
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        if (photos.length > 1)
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: photos.asMap().entries.map((entry) {
+                int index = entry.key;
+                return Container(
+                  width: 8.0,
+                  height: 8.0,
+                  margin: EdgeInsets.symmetric(horizontal: 4.0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPhotoIndex == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        if (photos.length > 1)
+          Positioned(
+            bottom: 40,
+            right: 20,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: Text(
+                '${_currentPhotoIndex + 1}/${photos.length}',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildInfoCard(IconData icon, String value, String label) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.grey.shade50, Colors.white],
+        ),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.pink.shade50,
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFFF5A5F).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color:const Color(0xFFFF5A5F), size: 20),
+            child: Icon(
+              icon,
+              color: const Color(0xFFFF5A5F),
+              size: 24,
+            ),
           ),
           SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.grey[800],
             ),
@@ -627,233 +1283,121 @@ class _DetailPropertyPageState extends State<DetailPropertyPage> with TickerProv
     );
   }
 
-  Future<void> _openWhatsApp(String phoneNumber, String hostName, String propertyTitle) async {
-    if (phoneNumber.isEmpty) {
-      _showSnackBar('Nomor telepon tidak tersedia', Colors.orange);
-      return;
-    }
-
-    String cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '62${cleanPhone.substring(1)}';
-    } else if (!cleanPhone.startsWith('62') && !cleanPhone.startsWith('+62')) {
-      cleanPhone = '62$cleanPhone';
-    }
-
-    String message = Uri.encodeComponent(
-      'Halo $hostName! Saya tertarik dengan properti "$propertyTitle" yang Anda tawarkan. Bisakah kita diskusi lebih lanjut?'
-    );
-
-    final List<String> whatsappUrls = [
-      'whatsapp://send?phone=$cleanPhone&text=$message',
-      'https://wa.me/$cleanPhone?text=$message',
-      'https://api.whatsapp.com/send?phone=$cleanPhone&text=$message',
-    ];
-
-    bool launched = false;
-    for (String url in whatsappUrls) {
-      try {
-        final uri = Uri.parse(url);
-        if (await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-          launched = true;
-          break;
+  String _formatPrice(dynamic price) {
+    if (price == null) return '0';
+    
+    try {
+      int priceInt = int.parse(price.toString());
+      String priceStr = priceInt.toString();
+      
+      // Add thousand separators
+      String result = '';
+      for (int i = 0; i < priceStr.length; i++) {
+        if (i > 0 && (priceStr.length - i) % 3 == 0) {
+          result += '.';
         }
-      } catch (e) {}
+        result += priceStr[i];
+      }
+      
+      return result;
+    } catch (e) {
+      return price.toString();
     }
+  }
 
-    if (!launched) {
-      _showSnackBar('WhatsApp tidak ditemukan. Silakan install WhatsApp terlebih dahulu.', Colors.red);
-    }
+  String _formatDate(DateTime date) {
+    final months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   void _shareProperty(Map<String, dynamic> data) {
-    _showSnackBar('Fitur berbagi akan segera tersedia!', Colors.blue);
-  }
+    // Implement share functionality
+    final String shareText = '''
+🏠 ${data['title'] ?? 'Properti Airbnb'}
 
-  void _showSnackBar(String message, Color color) {
+📍 ${data['address'] ?? 'Alamat tidak tersedia'}
+💰 Rp${_formatPrice(data['price_per_night'])}/malam
+⭐ Rating: ${averageRating > 0 ? averageRating.toStringAsFixed(1) : '4.8'}
+
+👥 Maks ${data['max_guests'] ?? 0} tamu
+🛏️ ${data['bedrooms'] ?? 0} kamar tidur  
+🛁 ${data['bathrooms'] ?? 0} kamar mandi
+
+${data['description'] ?? ''}
+
+Pesan sekarang di aplikasi kami!
+    ''';
+    
+    // Here you would typically use share_plus package
+    // Share.share(shareText);
+    
+    // For now, show a snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: color,
-        duration: Duration(seconds: 3),
+        content: Text('Fitur berbagi akan segera tersedia'),
+        backgroundColor: const Color(0xFFFF5A5F),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  String _formatPrice(dynamic price) {
-    try {
-      final numPrice = double.parse(price.toString());
-      if (numPrice >= 1000000) {
-        return '${(numPrice / 1000000).toStringAsFixed(1)}M';
-      } else if (numPrice >= 1000) {
-        return '${(numPrice / 1000).toStringAsFixed(0)}K';
+  void _openWhatsApp(String phoneNumber, String hostName, String propertyTitle) async {
+    String cleanPhoneNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    if (!cleanPhoneNumber.startsWith('+')) {
+      if (cleanPhoneNumber.startsWith('0')) {
+        cleanPhoneNumber = '+62${cleanPhoneNumber.substring(1)}';
+      } else if (cleanPhoneNumber.startsWith('62')) {
+        cleanPhoneNumber = '+$cleanPhoneNumber';
+      } else {
+        cleanPhoneNumber = '+62$cleanPhoneNumber';
       }
-      return numPrice.toStringAsFixed(0);
-    } catch (e) {
-      return '0';
     }
-  }
 
-  Widget _buildPhotoSlider(List<String> photos) {
-    if (photos.isEmpty) {
-      return Container(
-        height: 300,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.grey.shade300, Colors.grey.shade100],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.image_not_supported, size: 64, color: Colors.grey.shade500),
-              SizedBox(height: 8),
-              Text('Foto tidak tersedia', style: TextStyle(color: Colors.grey.shade600)),
-            ],
-          ),
+    final message = Uri.encodeComponent(
+      'Halo $hostName! 👋\n\n'
+      'Saya tertarik dengan properti Anda: "$propertyTitle"\n\n'
+      'Bisakah Anda memberikan informasi lebih lanjut mengenai:\n'
+      '• Ketersediaan tanggal\n'
+      '• Fasilitas yang tersedia\n'
+      '• Kebijakan booking\n\n'
+      'Terima kasih! 🙏'
+    );
+
+    final whatsappUrl = 'https://wa.me/$cleanPhoneNumber?text=$message';
+
+    try {
+      if (await canLaunch(whatsappUrl)) {
+        await launch(whatsappUrl);
+      } else {
+        // Fallback to regular phone call or SMS
+        final phoneUrl = 'tel:$cleanPhoneNumber';
+        if (await canLaunch(phoneUrl)) {
+          await launch(phoneUrl);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tidak dapat membuka WhatsApp atau telepon'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan saat membuka WhatsApp'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
-
-    return Container(
-      height: 300,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPhotoIndex = index;
-              });
-            },
-            itemCount: photos.length,
-            itemBuilder: (context, index) {
-              return Hero(
-                tag: 'property-image-$index',
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(25),
-                      bottomRight: Radius.circular(25),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(25),
-                      bottomRight: Radius.circular(25),
-                    ),
-                    child: Image.network(
-                      photos[index],
-                      height: 300,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 300,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.grey.shade300, Colors.grey.shade100],
-                            ),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.image_not_supported, size: 64, color: Colors.grey.shade500),
-                                SizedBox(height: 8),
-                                Text('Gagal memuat gambar', style: TextStyle(color: Colors.grey.shade600)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          height: 300,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.grey.shade200, Colors.grey.shade100],
-                            ),
-                          ),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFFF5A5F),)
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          if (photos.length > 1)
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  photos.length,
-                  (index) => AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
-                    width: _currentPhotoIndex == index ? 24 : 8,
-                    height: 8,
-                    margin: EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: _currentPhotoIndex == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.4),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (photos.length > 1)
-            Positioned(
-              top: 60,
-              right: 20,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                ),
-                child: Text(
-                  '${_currentPhotoIndex + 1}/${photos.length}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }
