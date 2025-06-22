@@ -191,7 +191,7 @@ class _ProfilPageState extends State<ProfilPage> {
               ],
             ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 4,
+        currentIndex: 3,
         selectedItemColor: const Color(0xFFFF5A5F),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
@@ -207,19 +207,17 @@ class _ProfilPageState extends State<ProfilPage> {
               Navigator.pushReplacementNamed(context, '/perjalanan');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/pesan');
-              break;
-            case 4:
+              // Navigator.pushReplacementNamed(context, '/pesan');
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
-          BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
-        ],
+        items: [
+  BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Telusuri'),
+  BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favorit'),
+  BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: 'Perjalanan'),
+  BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profil'),
+],
+
       ),
     );
   }

@@ -266,31 +266,34 @@ class _ExplorePageState extends State<ExplorePage> {
         type: BottomNavigationBarType.fixed,
         onTap: (idx) {
           switch (idx) {
-            case 1:
-              Navigator.push(context, MaterialPageRoute(builder: (_) => FavoritPage()));
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/perjalanan');
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/pesan');
-              break;
-            case 4:
-              Navigator.pushNamed(context, '/profil');
-              break;
-          }
-        },
+          case 0:
+            // Telusuri (jika ingin aksi)
+            break;
+          case 1:
+            Navigator.pushNamed(context, '/favorit');
+            break;
+          case 2:
+            Navigator.pushNamed(context, '/perjalanan');
+            break;
+          case 3:
+            Navigator.pushNamed(context, '/profil'); // ← PROFIL ADA DI INDEX 3
+            break;
+        }
+      },
         items: const [
+          // index 0
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
+          // index 1
           BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
+          // index 2
           BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
+          // index 3
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
         ],
-      ),
-    );
-  }
-}
+              ),
+            );
+          }
+        }
 
 class _TabIcon extends StatelessWidget {
   final IconData icon;

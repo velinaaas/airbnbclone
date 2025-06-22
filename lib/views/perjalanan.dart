@@ -135,14 +135,14 @@ class _PerjalananPageState extends State<PerjalananPage> {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          const routes = ['/explore','/favorit','/perjalanan','/pesan','/profil'];
+          const routes = ['/explore','/favorit','/perjalanan','/profil'];
           if (index != 2) Navigator.pushNamed(context, routes[index]);
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Telusuri"),
           BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Favorit"),
           BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: "Perjalanan"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
+          // BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Pesan"),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
         ],
       ),

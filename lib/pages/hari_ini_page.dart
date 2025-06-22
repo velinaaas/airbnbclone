@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:airbnbclone/pages/tempat_page.dart';
-import 'package:airbnbclone/pages/pesan_page.dart';
+// import 'package:airbnbclone/pages/pesan_page.dart';
 import 'package:airbnbclone/pages/menu_page.dart';
 import 'package:intl/intl.dart';
 
@@ -22,7 +22,7 @@ class _HariIniPageState extends State<HariIniPage> {
   final List<Widget> _pages = [
     const _HariIniContent(),
     TempatPage(),
-    PesanPage(),
+    // PesanPage(),
     const MenuPage(),
   ];
 
@@ -52,10 +52,10 @@ class _HariIniPageState extends State<HariIniPage> {
             icon: Icon(Icons.house_outlined), 
             label: 'Tempat'
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline), 
-            label: 'Pesan'
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.chat_bubble_outline), 
+          //   label: 'Pesan'
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline), 
             label: 'Profil'
