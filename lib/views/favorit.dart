@@ -71,11 +71,11 @@ class FavoritPage extends StatelessWidget {
               Navigator.pushNamed(context, '/perjalanan');
               break;
             case 3:
-              Navigator.pushNamed(context, '/pesan');
-              break;
-            case 4:
               Navigator.pushNamed(context, '/profil');
               break;
+            // case 4:
+            //   Navigator.pushNamed(context, '/profil');
+            //   break;
           }
         },
         items: const [
