@@ -288,6 +288,10 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: $responseBody');
+      print('Token used: $token');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -646,8 +650,7 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      subdomains: ['a', 'b', 'c'],
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     ),
                     MarkerLayer(
                       markers: [

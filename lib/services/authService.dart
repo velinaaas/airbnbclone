@@ -129,72 +129,89 @@ class AuthService {
   }
 
   // ==================== SWITCH ROLE TUAN RUMAH ====================
-  static Future<bool> switchToHostRole(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final userJson = prefs.getString('user');
+static Future<bool> switchToHostRole(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final userJson = prefs.getString('user');
 
-    if (token == null || userJson == null || userJson.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data user rusak, silakan login ulang.')),
-      );
-      return false;
-    }
-
-    try {
-      final decoded = jsonDecode(userJson);
-      if (decoded == null || decoded is! Map<String, dynamic>) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User tidak valid. Silakan login ulang.')),
-        );
-        return false;
-      }
-
-      final user = User.fromJson(decoded);
-
-      final response = await http.post(
-        Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'role_id': 2}),
-      );
-
-      if (response.statusCode == 200) {
-        List<String> updatedRoles = List<String>.from(user.roles);
-        if (!updatedRoles.contains('host')) {
-          updatedRoles.add('host');
-        }
-
-        final updatedUser = User(
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone_number: user.phone_number,
-          roles: updatedRoles,
-        );
-
-        await prefs.setString('user', jsonEncode(updatedUser.toJson()));
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sekarang kamu adalah Tuan Rumah!')),
-        );
-        return true;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal switch role: ${response.body}')),
-        );
-        return false;
-      }
-    } catch (e) {
-      print('Error switchRole: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
-      );
-      return false;
-    }
+  if (token == null || userJson == null || userJson.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data user rusak, silakan login ulang.')),
+    );
+    return false;
   }
+
+  try {
+    final decoded = jsonDecode(userJson);
+    if (decoded is! Map<String, dynamic>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User tidak valid. Silakan login ulang.')),
+      );
+      return false;
+    }
+
+    final user = User.fromJson(decoded);
+
+    final response = await http.post(
+      Uri.parse('https://apiairbnb-production.up.railway.app/api/users/switch-role'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'role_id': 2}),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      final newToken = responseData['token'];
+
+      if (newToken == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Token tidak ditemukan dalam respons.')),
+        );
+        return false;
+      }
+
+      // ✅ Simpan token baru
+      await prefs.setString('token', newToken);
+
+      // ✅ Tambahkan role 'host' ke user lokal
+      List<String> updatedRoles = List<String>.from(user.roles);
+      if (!updatedRoles.contains('host')) {
+        updatedRoles.add('host');
+      }
+
+      final updatedUser = User(
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone_number: user.phone_number,
+        roles: updatedRoles,
+      );
+
+      // ✅ Simpan user yang sudah diperbarui
+      await prefs.setString('user', jsonEncode(updatedUser.toJson()));
+
+      // ✅ Notifikasi sukses
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sekarang kamu adalah Tuan Rumah!')),
+      );
+      return true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal switch role: ${response.body}')),
+      );
+      return false;
+    }
+  } catch (e) {
+    print('Error switchRole: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
+    );
+    return false;
+  }
+}
+
 
   // ==================== GET PROFILE ASLI dari API ====================
   static Future<UserProfile?> getUserProfile() async {

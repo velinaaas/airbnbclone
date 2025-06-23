@@ -56,11 +56,11 @@ class _SearchPageState extends State<SearchPage>
   }
 
   final List<Map<String, String>> _suggestedCategories = [
-    {"icon": "🏡", "name": "villa"},
-    {"icon": "🏙️", "name": "apartment"},
-    {"icon": "🛖", "name": "cabin"},
-    {"icon": "🏕️", "name": "camp"},
-    {"icon": "🏠", "name": "house"},
+    {"icon": "🏡", "name": "Villa"},
+    {"icon": "🏙️", "name": "Apartemen"},
+    {"icon": "🛖", "name": "Kontrakan"},
+    {"icon": "🏠", "name": "Homestay"},
+    {"icon": "🏕️", "name": "Cottage"},
   ];
 
   // ─────────────────────── Mode 2: Filter ─────────────────────
